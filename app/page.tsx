@@ -1,10 +1,37 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { NavSidebar } from "@/components/nav-sidebar";
 import { KpiCard } from "@/components/kpi-card";
+import { AddSubscriptionDialog } from "@/components/add-subscription-dialog";
+import { SubscriptionList } from "@/components/subscription-list";
 import { Wallet, TrendingDown, CalendarClock, Layers } from "lucide-react";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        router.push("/login");
+      } else {
+        setCheckingAuth(false);
+      }
+    });
+  }, [router]);
+
+  if (checkingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-sm text-muted">Sprawdzanie sesji...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex">
       <NavSidebar />
@@ -26,10 +53,15 @@ export default function DashboardPage() {
           <KpiCard label="Najbliższe odnowienie" value={3} suffix=" dni" icon={CalendarClock} />
         </section>
 
-        <section className="glass-card mt-6 flex h-64 items-center justify-center">
-          <p className="text-sm text-muted">
-            Wykresy i lista subskrypcji pojawią się w Etapie 2 i 4.
-          </p>
+        <section className="glass-card mt-6 p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold text-foreground">
+              Twoje subskrypcje
+            </h2>
+            <AddSubscriptionDialog onAdded={() => setRefreshKey((k) => k + 1)} />
+          </div>
+
+          <SubscriptionList refreshKey={refreshKey} />
         </section>
       </main>
     </div>
