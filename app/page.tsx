@@ -8,6 +8,7 @@ import { KpiCard } from "@/components/kpi-card";
 import { AddSubscriptionDialog } from "@/components/add-subscription-dialog";
 import { SubscriptionList } from "@/components/subscription-list";
 import { Wallet, TrendingDown, CalendarClock, Layers } from "lucide-react";
+import { AiAdvisorCard } from "@/components/ai-advisor-card";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -62,6 +63,9 @@ export default function DashboardPage() {
           </div>
 
           <SubscriptionList refreshKey={refreshKey} />
+        </section>
+                <section className="mt-6">
+          <AiAdvisorCard refreshKey={refreshKey} />
         </section>
       </main>
     </div>
