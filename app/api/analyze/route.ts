@@ -44,12 +44,30 @@ Przeanalizuj tę listę i w punktach, po polsku (maks. 150 słów):
 2. Zaproponuj konkretne, praktyczne sposoby oszczędzania.
 3. Podaj przybliżoną sumę możliwych oszczędności miesięcznie w złotych.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-    });
+        // Prosty retry z rosnącym opóźnieniem - Gemini (darmowy tier) bywa
+    // chwilowo przeciążone (błąd 503), więc próbujemy do 3 razy.
+    async function generateWithRetry(attempt = 1): Promise<string> {
+      try {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.8-flash",
+          contents: prompt,
+        });
+        return response.text ?? "";
+      } catch (err: unknown) {
+        const isOverloaded =
+          err instanceof Error && err.message.includes("UNAVAILABLE");
 
-    return NextResponse.json({ advice: response.text });
+        if (isOverloaded && attempt < 3) {
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+          return generateWithRetry(attempt + 1);
+        }
+        throw err;
+      }
+    }
+
+    const advice = await generateWithRetry();
+
+    return NextResponse.json({ advice });
   } catch (err) {
     console.error("Błąd Gemini API:", err);
     return NextResponse.json(
