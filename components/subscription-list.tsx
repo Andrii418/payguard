@@ -1,40 +1,19 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Trash2 } from "lucide-react";
+import type { Subscription } from "@/lib/use-subscriptions";
 
-interface Subscription {
-  id: string;
-  name: string;
-  price: number;
-  billing_cycle: string;
-  category: string;
-  next_renewal: string;
+interface SubscriptionListProps {
+  subscriptions: Subscription[];
+  loading: boolean;
+  onDeleted: () => void;
 }
 
-export function SubscriptionList({ refreshKey }: { refreshKey: number }) {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchSubscriptions = useCallback(async () => {
-    setLoading(true);
-    const { data } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .order("next_renewal", { ascending: true });
-
-    setSubscriptions(data ?? []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchSubscriptions();
-  }, [fetchSubscriptions, refreshKey]);
-
+export function SubscriptionList({ subscriptions, loading, onDeleted }: SubscriptionListProps) {
   async function handleDelete(id: string) {
     await supabase.from("subscriptions").delete().eq("id", id);
-    fetchSubscriptions();
+    onDeleted();
   }
 
   if (loading) {
