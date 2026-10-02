@@ -1,29 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Subscription } from "@/lib/use-subscriptions";
 
-interface Subscription {
-  name: string;
-  price: number;
-  billing_cycle: string;
-  category: string;
-}
-
-export function AiAdvisorCard({ refreshKey }: { refreshKey: number }) {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+export function AiAdvisorCard({ subscriptions }: { subscriptions: Subscription[] }) {
   const [advice, setAdvice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    supabase
-      .from("subscriptions")
-      .select("name, price, billing_cycle, category")
-      .then(({ data }) => setSubscriptions(data ?? []));
-  }, [refreshKey]);
 
   async function handleAnalyze() {
     setLoading(true);
