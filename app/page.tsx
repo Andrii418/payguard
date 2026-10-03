@@ -12,6 +12,7 @@ import { SpendingCharts } from "@/components/spending-charts";
 import { UpcomingRenewals } from "@/components/upcoming-renewals";
 import { AiAdvisorCard } from "@/components/ai-advisor-card";
 import { Wallet, TrendingDown, CalendarClock, Layers } from "lucide-react";
+import { SubscriptionPlanCard } from "@/components/subscription-plan-card";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -122,6 +123,10 @@ export default function DashboardPage() {
 
         <section className="mt-6">
           <AiAdvisorCard subscriptions={subscriptions} />
+        </section>
+
+        <section className="mt-6">
+          <SubscriptionPlanCard />
         </section>
       </main>
     </div>
