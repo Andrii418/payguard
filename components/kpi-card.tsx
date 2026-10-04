@@ -11,9 +11,18 @@ interface KpiCardProps {
   suffix?: string;
   icon: LucideIcon;
   glow?: boolean;
+  index?: number;
 }
 
-export function KpiCard({ label, value, prefix = "", suffix = "", icon: Icon, glow }: KpiCardProps) {
+export function KpiCard({
+  label,
+  value,
+  prefix = "",
+  suffix = "",
+  icon: Icon,
+  glow,
+  index = 0,
+}: KpiCardProps) {
   const [displayValue, setDisplayValue] = useState(0);
   const motionValue = useMotionValue(0);
   const springValue = useSpring(motionValue, { duration: 1200, bounce: 0 });
@@ -28,12 +37,12 @@ export function KpiCard({ label, value, prefix = "", suffix = "", icon: Icon, gl
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: 0.5, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -3 }}
       className="glass-card overflow-hidden p-5"
     >
-      {/* Pulsująca poświata w tle - nasz element-podpis */}
       {glow && (
         <div className="absolute -right-6 -top-6 h-24 w-24 animate-pulse-glow rounded-full bg-emerald-500 blur-2xl" />
       )}
@@ -43,7 +52,7 @@ export function KpiCard({ label, value, prefix = "", suffix = "", icon: Icon, gl
         <Icon className="h-4 w-4 text-emerald-400" />
       </div>
 
-      <p className="relative mt-3 font-mono text-2xl font-semibold text-foreground">
+      <p className="relative mt-3 font-mono text-2xl font-semibold tabular-nums text-foreground">
         {prefix}
         {displayValue.toLocaleString("pl-PL")}
         {suffix}
