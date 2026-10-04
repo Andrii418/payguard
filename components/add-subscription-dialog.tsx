@@ -85,7 +85,7 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button className="gap-2 bg-emerald-500 hover:bg-emerald-500/90">
+          <Button className="gap-2 bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]">
             <Plus className="h-4 w-4" />
             Dodaj subskrypcję
           </Button>
@@ -163,7 +163,11 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
             />
           </div>
 
-          <Button type="submit" disabled={loading} className="mt-2 bg-emerald-500 hover:bg-emerald-500/90">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="mt-2 bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]"
+          >
             {loading ? "Zapisywanie..." : "Zapisz subskrypcję"}
           </Button>
         </form>

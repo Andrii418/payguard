@@ -48,7 +48,7 @@ export function AiAdvisorCard({ subscriptions }: { subscriptions: Subscription[]
         <Button
           onClick={handleAnalyze}
           disabled={loading || subscriptions.length === 0}
-          className="gap-2 bg-emerald-500 hover:bg-emerald-500/90"
+          className="gap-2 bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]"
         >
           {loading ? (
             <>
