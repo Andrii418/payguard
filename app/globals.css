@@ -68,17 +68,82 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* Jedyny, celowy ruch tła w całej aplikacji - wolno dryfująca poświata.
+     To nasz "signature moment", więc więcej animacji w tle nie dodajemy. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-size: 160% 160%;
     background-image:
-      radial-gradient(circle at 15% 10%, rgba(16, 185, 129, 0.06), transparent 40%),
-      radial-gradient(circle at 85% 90%, rgba(16, 185, 129, 0.04), transparent 40%);
-    background-attachment: fixed;
+      radial-gradient(circle at 20% 15%, rgba(16, 185, 129, 0.08), transparent 45%),
+      radial-gradient(circle at 80% 85%, rgba(16, 185, 129, 0.05), transparent 45%);
+    animation: ambient-drift 26s ease-in-out infinite alternate;
+  }
+
+  /* Delikatna faktura "ziarna" - daje wrażenie materiału, nie płaskiego PNG */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.025;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Czytelny, zgodny z motywem focus ring dla dostępności klawiaturowej */
+  :focus-visible {
+    outline: 2px solid rgba(52, 211, 153, 0.6);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Szczupły, szmaragdowy scrollbar zamiast domyślnego systemowego */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(16, 185, 129, 0.25) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.25);
+    border-radius: 999px;
+    border: 2px solid var(--background);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.4);
   }
 }
 
 @layer components {
-  /* Karta "szklana" - nasz podstawowy budulec UI w całej aplikacji */
+  /* Karta "szklana" v2 - delikatny wewnętrzny rozbłysk u góry (efekt prawdziwego
+     szkła), głębszy cień i płynna reakcja na hover zamiast statycznej płaszczyzny. */
   .glass-card {
-    @apply relative rounded-2xl border border-emerald-500/20 bg-white/[0.03] backdrop-blur-xl;
+    @apply relative rounded-2xl border border-emerald-500/15 bg-white/[0.025] backdrop-blur-xl;
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
+      0 8px 30px -12px rgba(0, 0, 0, 0.6);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .glass-card:hover {
+    border-color: rgba(16, 185, 129, 0.3);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+      0 12px 40px -12px rgba(16, 185, 129, 0.15),
+      0 8px 30px -12px rgba(0, 0, 0, 0.7);
   }
 }
 
@@ -91,5 +156,28 @@
   50% {
     opacity: 0.3;
     transform: scale(1.05);
+  }
+}
+
+@keyframes ambient-drift {
+  0% {
+    background-position: 0% 0%, 100% 100%;
+  }
+  100% {
+    background-position: 6% 10%, 94% 90%;
+  }
+}
+
+/* Dostępność: dla osób wrażliwych na ruch wyłączamy animacje całkowicie */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
