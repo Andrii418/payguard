@@ -87,15 +87,23 @@ export default function DashboardPage() {
             suffix=" zł"
             icon={Wallet}
             glow
+            index={0}
           />
-          <KpiCard label="Aktywne subskrypcje" value={subscriptions.length} icon={Layers} />
+          <KpiCard label="Aktywne subskrypcje" value={subscriptions.length} icon={Layers} index={1} />
           <KpiCard
             label="Możliwe oszczędności"
             value={Math.round(possibleSavings * 100) / 100}
             suffix=" zł"
             icon={TrendingDown}
+            index={2}
           />
-          <KpiCard label="Najbliższe odnowienie" value={nextRenewalDays} suffix=" dni" icon={CalendarClock} />
+          <KpiCard
+            label="Najbliższe odnowienie"
+            value={nextRenewalDays}
+            suffix=" dni"
+            icon={CalendarClock}
+            index={3}
+          />
         </section>
 
         <section className="glass-card mt-6 p-6">
