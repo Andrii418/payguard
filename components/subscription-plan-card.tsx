@@ -75,14 +75,14 @@ export function SubscriptionPlanCard() {
         </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-medium ${
-            status === "pro" ? "bg-emerald-500/10 text-emerald-400" : "bg-white/[0.05] text-muted"
+            status === "pro" ? "bg-emerald-500/10 text-emerald-400" : "bg-white/[0.05] text-muted-foreground"
           }`}
         >
           {status === "pro" ? "PRO" : "FREE"}
         </span>
       </div>
 
-      <p className="mb-4 text-sm text-muted">
+      <p className="mb-4 text-sm text-muted-foreground">
         {status === "pro"
           ? "Masz aktywny plan Pro (tryb testowy Stripe) z nielimitowanymi subskrypcjami i priorytetowym wsparciem AI."
           : "Jesteś na planie darmowym. Przejdź na Pro (tryb testowy), żeby odblokować pełną funkcjonalność."}

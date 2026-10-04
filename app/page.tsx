@@ -33,7 +33,7 @@ export default function DashboardPage() {
   if (checkingAuth) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted">Sprawdzanie sesji...</p>
+        <p className="text-sm text-muted-foreground">Sprawdzanie sesji...</p>
       </div>
     );
   }
@@ -75,7 +75,7 @@ export default function DashboardPage() {
           <h1 className="font-display text-2xl font-semibold text-foreground">
             Przegląd finansowy
           </h1>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 text-sm text-muted-foreground">
             Twoje subskrypcje pod kontrolą — na żywo.
           </p>
         </header>

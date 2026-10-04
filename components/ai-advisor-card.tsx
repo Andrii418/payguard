@@ -62,7 +62,7 @@ export function AiAdvisorCard({ subscriptions }: { subscriptions: Subscription[]
       </div>
 
       {subscriptions.length === 0 && (
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           Dodaj co najmniej jedną subskrypcję, żeby AI mogło ją przeanalizować.
         </p>
       )}

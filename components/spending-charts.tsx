@@ -64,7 +64,7 @@ export function SpendingCharts({ subscriptions }: { subscriptions: Subscription[
           Wydatki wg kategorii
         </h2>
         {categoryData.length === 0 ? (
-          <p className="text-sm text-muted">Brak danych do wyświetlenia.</p>
+          <p className="text-sm text-muted-foreground">Brak danych do wyświetlenia.</p>
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={categoryData}>
@@ -87,7 +87,7 @@ export function SpendingCharts({ subscriptions }: { subscriptions: Subscription[
           Prognoza wydatków (burn rate)
         </h2>
         {totalMonthly === 0 ? (
-          <p className="text-sm text-muted">Brak danych do wyświetlenia.</p>
+          <p className="text-sm text-muted-foreground">Brak danych do wyświetlenia.</p>
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={burnRateData}>

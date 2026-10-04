@@ -22,7 +22,7 @@ export function UpcomingRenewals({ subscriptions }: { subscriptions: Subscriptio
       </h2>
 
       {upcoming.length === 0 ? (
-        <p className="text-sm text-muted">Brak zaplanowanych odnowień.</p>
+        <p className="text-sm text-muted-foreground">Brak zaplanowanych odnowień.</p>
       ) : (
         <div className="flex flex-col gap-3">
           {upcoming.map((s) => (
@@ -31,7 +31,7 @@ export function UpcomingRenewals({ subscriptions }: { subscriptions: Subscriptio
                 <CalendarClock className="h-4 w-4 text-emerald-400" />
                 <span className="text-sm text-foreground">{s.name}</span>
               </div>
-              <span className={`font-mono text-xs ${s.daysUntil <= 3 ? "text-red-400" : "text-muted"}`}>
+              <span className={`font-mono text-xs ${s.daysUntil <= 3 ? "text-red-400" : "text-muted-foreground"}`}>
                 {s.daysUntil === 0 ? "dziś" : `za ${s.daysUntil} dni`}
               </span>
             </div>

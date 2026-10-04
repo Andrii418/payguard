@@ -48,7 +48,7 @@ export default function LoginPage() {
         <h1 className="mb-1 font-display text-xl font-semibold text-foreground">
           {mode === "login" ? "Zaloguj się" : "Stwórz konto"}
         </h1>
-        <p className="mb-6 text-sm text-muted">
+        <p className="mb-6 text-sm text-muted-foreground">
           {mode === "login" ? "Wróć do swojego panelu." : "To zajmie tylko chwilę."}
         </p>
 
@@ -87,7 +87,7 @@ export default function LoginPage() {
 
         <button
           onClick={() => setMode(mode === "login" ? "signup" : "login")}
-          className="mt-4 text-sm text-muted hover:text-emerald-400"
+          className="mt-4 text-sm text-muted-foreground hover:text-emerald-400"
         >
           {mode === "login" ? "Nie masz konta? Zarejestruj się" : "Masz już konto? Zaloguj się"}
         </button>

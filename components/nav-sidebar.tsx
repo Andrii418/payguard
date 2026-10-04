@@ -29,7 +29,7 @@ export function NavSidebar() {
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                 active
                   ? "bg-emerald-500/10 text-emerald-400"
-                  : "text-muted hover:bg-white/[0.04] hover:text-foreground"
+                  : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -41,7 +41,7 @@ export function NavSidebar() {
 
       {/* Status konta na dole */}
       <div className="glass-card p-4">
-        <p className="text-xs text-muted">Miesięczne wydatki</p>
+        <p className="text-xs text-muted-foreground">Miesięczne wydatki</p>
         <p className="font-mono text-lg font-semibold text-foreground">247,50 zł</p>
       </div>
     </aside>

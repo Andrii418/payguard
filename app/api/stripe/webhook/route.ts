@@ -21,20 +21,31 @@ export async function POST(req: NextRequest) {
 
   switch (event.type) {
     // Użytkownik pomyślnie opłacił subskrypcję
-    case "checkout.session.completed": {
+        case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.supabase_user_id;
 
-      if (userId) {
-        await supabaseAdmin
-          .from("profiles")
-          .update({
-            stripe_customer_id: session.customer as string,
-            stripe_subscription_id: session.subscription as string,
-            subscription_status: "pro",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", userId);
+      console.log("Webhook checkout.session.completed, userId z metadata:", userId);
+
+      if (!userId) {
+        console.error("BRAK supabase_user_id w metadata sesji!", session.metadata);
+        break;
+      }
+
+      const { error } = await supabaseAdmin
+        .from("profiles")
+        .update({
+          stripe_customer_id: session.customer as string,
+          stripe_subscription_id: session.subscription as string,
+          subscription_status: "pro",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId);
+
+      if (error) {
+        console.error("Błąd zapisu do Supabase (profiles):", error);
+      } else {
+        console.log("Profil zaktualizowany na PRO dla:", userId);
       }
       break;
     }

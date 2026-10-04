@@ -39,7 +39,7 @@ export function KpiCard({ label, value, prefix = "", suffix = "", icon: Icon, gl
       )}
 
       <div className="relative flex items-center justify-between">
-        <p className="text-sm text-muted">{label}</p>
+        <p className="text-sm text-muted-foreground">{label}</p>
         <Icon className="h-4 w-4 text-emerald-400" />
       </div>
 
