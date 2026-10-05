@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -58,6 +59,7 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) {
       setLoading(false);
+      toast.error("Musisz być zalogowany, żeby dodać subskrypcję.");
       return;
     }
 
@@ -72,13 +74,17 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
 
     setLoading(false);
 
-    if (!error) {
-      setName("");
-      setPrice("");
-      setNextRenewal("");
-      setOpen(false);
-      onAdded();
+    if (error) {
+      toast.error("Nie udało się dodać subskrypcji.", { description: error.message });
+      return;
     }
+
+    toast.success(`Dodano "${name}" do Twoich subskrypcji.`);
+    setName("");
+    setPrice("");
+    setNextRenewal("");
+    setOpen(false);
+    onAdded();
   }
 
   return (
