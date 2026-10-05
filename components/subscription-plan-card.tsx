@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Crown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function SubscriptionPlanCard() {
   const [status, setStatus] = useState<"free" | "pro" | null>(null);
@@ -41,15 +42,17 @@ export function SubscriptionPlanCard() {
       body: JSON.stringify({ userId, email }),
     });
 
-    const data = await res.json();
+        const data = await res.json();
     setLoading(false);
 
     if (data.url) {
       window.location.href = data.url;
+    } else {
+      toast.error("Nie udało się rozpocząć płatności. Spróbuj ponownie.");
     }
   }
 
-  async function handleCancel() {
+    async function handleCancel() {
     if (!userId) return;
     setLoading(true);
 
@@ -63,6 +66,9 @@ export function SubscriptionPlanCard() {
 
     if (res.ok) {
       setStatus("free");
+      toast.success("Subskrypcja Pro anulowana. Przechodzisz na plan darmowy.");
+    } else {
+      toast.error("Nie udało się anulować subskrypcji.");
     }
   }
 
