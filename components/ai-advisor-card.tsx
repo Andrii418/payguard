@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Subscription } from "@/lib/use-subscriptions";
+import { toast } from "sonner";
 
 export function AiAdvisorCard({ subscriptions }: { subscriptions: Subscription[] }) {
   const [advice, setAdvice] = useState<string | null>(null);
@@ -29,8 +30,9 @@ export function AiAdvisorCard({ subscriptions }: { subscriptions: Subscription[]
       } else {
         setAdvice(data.advice);
       }
-    } catch {
+        } catch {
       setError("Nie udało się połączyć z serwerem.");
+      toast.error("Nie udało się połączyć z Doradcą AI.");
     } finally {
       setLoading(false);
     }
