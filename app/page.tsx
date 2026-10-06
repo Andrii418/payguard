@@ -1,52 +1,63 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useAuthGuard } from "@/lib/use-auth-guard";
 import { useSubscriptions } from "@/lib/use-subscriptions";
 import { NavSidebar } from "@/components/nav-sidebar";
 import { KpiCard } from "@/components/kpi-card";
-import { AddSubscriptionDialog } from "@/components/add-subscription-dialog";
-import { SubscriptionList } from "@/components/subscription-list";
 import { SpendingCharts } from "@/components/spending-charts";
 import { UpcomingRenewals } from "@/components/upcoming-renewals";
 import { AiAdvisorCard } from "@/components/ai-advisor-card";
-import { Wallet, TrendingDown, CalendarClock, Layers } from "lucide-react";
 import { SubscriptionPlanCard } from "@/components/subscription-plan-card";
+import { BudgetAlertBanner } from "@/components/budget-alert-banner";
+import { LoadingScreen } from "@/components/loading-screen";
+import { Wallet, TrendingDown, CalendarClock, Layers } from "lucide-react";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const { subscriptions, loading } = useSubscriptions(refreshKey);
+  const checkingAuth = useAuthGuard();
+  const { subscriptions } = useSubscriptions(0);
+  const [budgetLimit, setBudgetLimit] = useState<number | null>(null);
+  const hasWarnedRef = useRef(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.push("/login");
-      } else {
-        setCheckingAuth(false);
-      }
+    if (checkingAuth) return;
+
+    supabase.auth.getUser().then(async ({ data: userData }) => {
+      if (!userData.user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("budget_limit")
+        .eq("id", userData.user.id)
+        .single();
+
+      setBudgetLimit(profile?.budget_limit ?? null);
     });
-  }, [router]);
+  }, [checkingAuth]);
 
-  if (checkingAuth) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted-foreground">Sprawdzanie sesji...</p>
-      </div>
-    );
-  }
-
-  // --- Obliczenia KPI na podstawie prawdziwych danych z bazy ---
   const monthlyCost = subscriptions.reduce(
     (sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12),
     0
   );
 
-  // Wykrywanie "duplikatów" kategorii jako przybliżony wskaźnik możliwych oszczędności:
-  // jeśli w jednej kategorii jest więcej niż jedna subskrypcja, sumujemy wszystkie
-  // oprócz najtańszej - to one są "nadmiarowe".
+  const isOverBudget = budgetLimit !== null && monthlyCost > budgetLimit;
+
+  useEffect(() => {
+    if (isOverBudget && !hasWarnedRef.current) {
+      toast.warning("Przekroczyłeś swój miesięczny limit budżetu!", {
+        description: `Wydajesz ${monthlyCost.toFixed(2)} zł przy limicie ${budgetLimit?.toFixed(2)} zł.`,
+      });
+      hasWarnedRef.current = true;
+    }
+    if (!isOverBudget) {
+      hasWarnedRef.current = false;
+    }
+  }, [isOverBudget, monthlyCost, budgetLimit]);
+
+  if (checkingAuth) return <LoadingScreen />;
+
   const categoryGroups = subscriptions.reduce<Record<string, number[]>>((acc, s) => {
     const monthly = s.billing_cycle === "monthly" ? s.price : s.price / 12;
     acc[s.category] = acc[s.category] ? [...acc[s.category], monthly] : [monthly];
@@ -68,7 +79,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex">
-      <NavSidebar />
+      <NavSidebar monthlyCost={monthlyCost} />
 
       <main className="flex-1 p-8">
         <header className="mb-8">
@@ -79,6 +90,10 @@ export default function DashboardPage() {
             Twoje subskrypcje pod kontrolą — na żywo.
           </p>
         </header>
+
+        {isOverBudget && budgetLimit !== null && (
+          <BudgetAlertBanner monthlyCost={monthlyCost} budgetLimit={budgetLimit} />
+        )}
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard
@@ -106,21 +121,6 @@ export default function DashboardPage() {
           />
         </section>
 
-        <section className="glass-card mt-6 p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-display text-lg font-semibold text-foreground">
-              Twoje subskrypcje
-            </h2>
-            <AddSubscriptionDialog onAdded={() => setRefreshKey((k) => k + 1)} />
-          </div>
-
-          <SubscriptionList
-            subscriptions={subscriptions}
-            loading={loading}
-            onDeleted={() => setRefreshKey((k) => k + 1)}
-          />
-        </section>
-
         <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <SpendingCharts subscriptions={subscriptions} />
         </section>
@@ -129,7 +129,7 @@ export default function DashboardPage() {
           <UpcomingRenewals subscriptions={subscriptions} />
         </section>
 
-        <section className="mt-6">
+        <section id="advisor" className="mt-6 scroll-mt-8">
           <AiAdvisorCard subscriptions={subscriptions} />
         </section>
 
