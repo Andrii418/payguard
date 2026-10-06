@@ -49,3 +49,9 @@ export const analyzeSchema = z.object({
     )
     .min(1, "Brak subskrypcji do przeanalizowania."),
 });
+
+// --- Limit budżetu (Ustawienia) ---
+export const budgetLimitSchema = z
+  .coerce.number({ error: "Limit musi być liczbą." })
+  .positive("Limit musi być większy od zera.")
+  .max(1000000, "Limit wygląda na zbyt wysoki — sprawdź wartość.");
