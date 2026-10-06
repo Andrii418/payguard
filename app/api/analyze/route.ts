@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
-
-interface SubscriptionInput {
-  name: string;
-  price: number;
-  billing_cycle: string;
-  category: string;
-}
+import { analyzeSchema } from "@/lib/schemas";
 
 export async function POST(req: NextRequest) {
   try {
-    const { subscriptions } = (await req.json()) as { subscriptions: SubscriptionInput[] };
+    const body = await req.json();
+    const result = analyzeSchema.safeParse(body);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: "Nieprawidłowe dane wejściowe.", issues: result.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const { subscriptions } = result.data;
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -19,14 +23,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!subscriptions || subscriptions.length === 0) {
-      return NextResponse.json(
-        { error: "Brak subskrypcji do przeanalizowania." },
-        { status: 400 }
-      );
-    }
-
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+    // ... reszta funkcji (subscriptionsSummary, prompt, generateWithRetry) BEZ ZMIAN
 
     const subscriptionsSummary = subscriptions
       .map(
