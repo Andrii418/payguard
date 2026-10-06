@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { subscriptionSchema } from "@/lib/schemas";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,8 @@ interface AddSubscriptionDialogProps {
   onAdded: () => void;
 }
 
+type FieldErrors = Partial<Record<"name" | "price" | "billing_cycle" | "category" | "next_renewal", string>>;
+
 export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -41,9 +44,8 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [nextRenewal, setNextRenewal] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
-  // Base UI może zwrócić `null` gdy nic nie jest wybrane — te funkcje
-  // "strażniczki" ignorują null i trzymają nasz stan zawsze jako string.
   function handleCategoryChange(value: string | null) {
     if (value) setCategory(value);
   }
@@ -54,6 +56,28 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFieldErrors({});
+
+    // Walidacja Zod PRZED wysłaniem czegokolwiek do bazy danych.
+    const result = subscriptionSchema.safeParse({
+      name,
+      price,
+      billing_cycle: billingCycle,
+      category,
+      next_renewal: nextRenewal,
+    });
+
+    if (!result.success) {
+      const errors: FieldErrors = {};
+      for (const issue of result.error.issues) {
+        const field = issue.path[0] as keyof FieldErrors;
+        if (!errors[field]) errors[field] = issue.message;
+      }
+      setFieldErrors(errors);
+      toast.error("Popraw błędy w formularzu.");
+      return;
+    }
+
     setLoading(true);
 
     const { data: userData } = await supabase.auth.getUser();
@@ -65,11 +89,7 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
 
     const { error } = await supabase.from("subscriptions").insert({
       user_id: userData.user.id,
-      name,
-      price: parseFloat(price),
-      category,
-      billing_cycle: billingCycle,
-      next_renewal: nextRenewal,
+      ...result.data,
     });
 
     setLoading(false);
@@ -79,16 +99,23 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
       return;
     }
 
-    toast.success(`Dodano "${name}" do Twoich subskrypcji.`);
+    toast.success(`Dodano "${result.data.name}" do Twoich subskrypcji.`);
     setName("");
     setPrice("");
     setNextRenewal("");
+    setFieldErrors({});
     setOpen(false);
     onAdded();
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setFieldErrors({});
+      }}
+    >
       <DialogTrigger
         render={
           <Button className="gap-2 bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]">
@@ -103,16 +130,17 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
           <DialogTitle className="font-display">Nowa subskrypcja</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Nazwa</Label>
             <Input
               id="name"
-              required
               placeholder="np. Netflix"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              aria-invalid={!!fieldErrors.name}
             />
+            {fieldErrors.name && <p className="text-xs text-red-400">{fieldErrors.name}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -122,10 +150,11 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
                 id="price"
                 type="number"
                 step="0.01"
-                required
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
+                aria-invalid={!!fieldErrors.price}
               />
+              {fieldErrors.price && <p className="text-xs text-red-400">{fieldErrors.price}</p>}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -163,10 +192,13 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
             <Input
               id="renewal"
               type="date"
-              required
               value={nextRenewal}
               onChange={(e) => setNextRenewal(e.target.value)}
+              aria-invalid={!!fieldErrors.next_renewal}
             />
+            {fieldErrors.next_renewal && (
+              <p className="text-xs text-red-400">{fieldErrors.next_renewal}</p>
+            )}
           </div>
 
           <Button
