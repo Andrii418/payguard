@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
       line_items: [{ price: process.env.STRIPE_PRO_PRICE_ID!, quantity: 1 }],
       customer_email: email,
       metadata: { supabase_user_id: userId },
-      success_url: `${req.headers.get("origin")}/?checkout=success`,
-      cancel_url: `${req.headers.get("origin")}/?checkout=cancelled`,
+      success_url: `${req.headers.get("origin")}/dashboard?checkout=success`,
+      cancel_url: `${req.headers.get("origin")}/dashboard?checkout=cancelled`,
     });
 
     return NextResponse.json({ url: session.url });

@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 import { LayoutDashboard, Wallet, Sparkles, Settings, ShieldCheck } from "lucide-react";
 
 const navItems = [
-  { href: "/", icon: LayoutDashboard, label: "Przegląd" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Przegląd" },
   { href: "/subscriptions", icon: Wallet, label: "Subskrypcje" },
-  { href: "/#advisor", icon: Sparkles, label: "Doradca AI" },
+  { href: "/dashboard#advisor", icon: Sparkles, label: "Doradca AI" },
   { href: "/settings", icon: Settings, label: "Ustawienia" },
 ];
 
