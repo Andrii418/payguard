@@ -55,3 +55,8 @@ export const budgetLimitSchema = z
   .coerce.number({ error: "Limit musi być liczbą." })
   .positive("Limit musi być większy od zera.")
   .max(1000000, "Limit wygląda na zbyt wysoki — sprawdź wartość.");
+
+// --- Otwarcie portalu rozliczeniowego Stripe ---
+export const billingPortalSchema = z.object({
+  userId: z.string().uuid("Nieprawidłowy identyfikator użytkownika."),
+});
