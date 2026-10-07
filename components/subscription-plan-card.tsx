@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Crown, Loader2 } from "lucide-react";
+import { Crown, Loader2, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 
 export function SubscriptionPlanCard() {
   const [status, setStatus] = useState<"free" | "pro" | null>(null);
   const [loading, setLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
 
@@ -42,7 +43,7 @@ export function SubscriptionPlanCard() {
       body: JSON.stringify({ userId, email }),
     });
 
-        const data = await res.json();
+    const data = await res.json();
     setLoading(false);
 
     if (data.url) {
@@ -52,7 +53,7 @@ export function SubscriptionPlanCard() {
     }
   }
 
-    async function handleCancel() {
+  async function handleCancel() {
     if (!userId) return;
     setLoading(true);
 
@@ -69,6 +70,26 @@ export function SubscriptionPlanCard() {
       toast.success("Subskrypcja Pro anulowana. Przechodzisz na plan darmowy.");
     } else {
       toast.error("Nie udało się anulować subskrypcji.");
+    }
+  }
+
+  async function handleOpenPortal() {
+    if (!userId) return;
+    setPortalLoading(true);
+
+    const res = await fetch("/api/create-portal-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+
+    const data = await res.json();
+    setPortalLoading(false);
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      toast.error(data.error ?? "Nie udało się otworzyć portalu rozliczeniowego.");
     }
   }
 
@@ -95,14 +116,31 @@ export function SubscriptionPlanCard() {
       </p>
 
       {status === "pro" ? (
-        <Button
-          onClick={handleCancel}
-          disabled={loading}
-          variant="outline"
-          className="border-red-500/30 text-red-400 hover:bg-red-500/10"
-        >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Anuluj subskrypcję"}
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button
+            onClick={handleOpenPortal}
+            disabled={portalLoading}
+            className="gap-2 bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]"
+          >
+            {portalLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Settings2 className="h-4 w-4" />
+                Zarządzaj płatnością i fakturami
+              </>
+            )}
+          </Button>
+
+          <Button
+            onClick={handleCancel}
+            disabled={loading}
+            variant="outline"
+            className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Szybkie anulowanie"}
+          </Button>
+        </div>
       ) : (
         <Button
           onClick={handleUpgrade}
