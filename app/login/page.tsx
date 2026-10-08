@@ -28,9 +28,17 @@ export default function LoginPage() {
 
     setLoading(false);
 
-    if (error) {
+        if (error) {
       setError(error.message);
       return;
+    }
+
+    if (mode === "signup") {
+      fetch("/api/send-welcome-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      }).catch(() => {});
     }
 
     router.push("/dashboard");
