@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Wallet, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { Mail } from "lucide-react";
 
 export default function SettingsPage() {
   const checkingAuth = useAuthGuard();
@@ -162,6 +163,42 @@ export default function SettingsPage() {
               <LogOut className="h-4 w-4" />
               Wyloguj się
             </Button>
+          </section>
+                    <section className="glass-card p-6">
+            <div className="mb-1 flex items-center gap-2">
+              <Mail className="h-5 w-5 text-emerald-400" />
+              <h2 className="font-display text-lg font-semibold text-foreground">
+                Narzędzia deweloperskie
+              </h2>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Ręczne wyzwolenie zadań cyklicznych (docelowo uruchamianych automatycznie przez
+              Vercel Cron). Usuń tę sekcję przed publicznym udostępnieniem produktu.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="outline"
+                className="border-emerald-500/20 text-foreground hover:bg-white/[0.04]"
+                onClick={async () => {
+                  const res = await fetch("/api/dev/trigger-renewal-reminders", { method: "POST" });
+                  const data = await res.json();
+                  toast.success(`Sprawdzono: ${data.checked}, wysłano: ${data.sent}`);
+                }}
+              >
+                Testuj przypomnienia o odnowieniu
+              </Button>
+              <Button
+                variant="outline"
+                className="border-emerald-500/20 text-foreground hover:bg-white/[0.04]"
+                onClick={async () => {
+                  const res = await fetch("/api/dev/trigger-weekly-digest", { method: "POST" });
+                  const data = await res.json();
+                  toast.success(`Sprawdzono: ${data.usersChecked}, wysłano: ${data.sent}`);
+                }}
+              >
+                Testuj tygodniowy digest
+              </Button>
+            </div>
           </section>
         </div>
       </main>
