@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { subscriptionSchema } from "@/lib/schemas";
+import type { Subscription } from "@/lib/use-subscriptions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 
 const categories = [
   { value: "streaming", label: "Streaming" },
@@ -30,13 +31,23 @@ const categories = [
   { value: "other", label: "Inne" },
 ];
 
-interface AddSubscriptionDialogProps {
-  onAdded: () => void;
+type FieldErrors = Partial<
+  Record<"name" | "price" | "billing_cycle" | "category" | "next_renewal", string>
+>;
+
+const primaryButtonClass =
+  "bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]";
+
+interface SubscriptionFormDialogProps {
+  subscription?: Subscription; // brak = tryb dodawania, jest = tryb edycji
+  trigger: React.ReactElement;
+  onSaved: () => void;
 }
 
-type FieldErrors = Partial<Record<"name" | "price" | "billing_cycle" | "category" | "next_renewal", string>>;
+// Jeden formularz obsługujący OBA tryby - reguły walidacji i wygląd w jednym miejscu.
+function SubscriptionFormDialog({ subscription, trigger, onSaved }: SubscriptionFormDialogProps) {
+  const isEdit = !!subscription;
 
-export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
@@ -54,11 +65,24 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
     if (value) setBillingCycle(value);
   }
 
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    setFieldErrors({});
+
+    // Przy otwarciu w trybie edycji wypełniamy pola aktualnymi danymi z bazy.
+    if (next && subscription) {
+      setName(subscription.name);
+      setPrice(String(subscription.price));
+      setCategory(subscription.category);
+      setBillingCycle(subscription.billing_cycle);
+      setNextRenewal(subscription.next_renewal);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFieldErrors({});
 
-    // Walidacja Zod PRZED wysłaniem czegokolwiek do bazy danych.
     const result = subscriptionSchema.safeParse({
       name,
       price,
@@ -80,54 +104,61 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
 
     setLoading(true);
 
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
+    if (isEdit && subscription) {
+      // --- TRYB EDYCJI ---
+      const { error } = await supabase
+        .from("subscriptions")
+        .update(result.data)
+        .eq("id", subscription.id);
+
       setLoading(false);
-      toast.error("Musisz być zalogowany, żeby dodać subskrypcję.");
-      return;
+
+      if (error) {
+        toast.error("Nie udało się zapisać zmian.", { description: error.message });
+        return;
+      }
+
+      toast.success(`Zaktualizowano "${result.data.name}".`);
+    } else {
+      // --- TRYB DODAWANIA ---
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        setLoading(false);
+        toast.error("Musisz być zalogowany, żeby dodać subskrypcję.");
+        return;
+      }
+
+      const { error } = await supabase.from("subscriptions").insert({
+        user_id: userData.user.id,
+        ...result.data,
+      });
+
+      setLoading(false);
+
+      if (error) {
+        toast.error("Nie udało się dodać subskrypcji.", { description: error.message });
+        return;
+      }
+
+      toast.success(`Dodano "${result.data.name}" do Twoich subskrypcji.`);
+      setName("");
+      setPrice("");
+      setNextRenewal("");
     }
 
-    const { error } = await supabase.from("subscriptions").insert({
-      user_id: userData.user.id,
-      ...result.data,
-    });
-
-    setLoading(false);
-
-    if (error) {
-      toast.error("Nie udało się dodać subskrypcji.", { description: error.message });
-      return;
-    }
-
-    toast.success(`Dodano "${result.data.name}" do Twoich subskrypcji.`);
-    setName("");
-    setPrice("");
-    setNextRenewal("");
-    setFieldErrors({});
     setOpen(false);
-    onAdded();
+    onSaved();
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) setFieldErrors({});
-      }}
-    >
-      <DialogTrigger
-        render={
-          <Button className="gap-2 bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]">
-            <Plus className="h-4 w-4" />
-            Dodaj subskrypcję
-          </Button>
-        }
-      />
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger render={trigger} />
 
       <DialogContent className="glass-card border-emerald-500/20">
         <DialogHeader>
-          <DialogTitle className="font-display">Nowa subskrypcja</DialogTitle>
+          <DialogTitle className="font-display">
+            {isEdit ? "Edytuj subskrypcję" : "Nowa subskrypcja"}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -201,15 +232,48 @@ export function AddSubscriptionDialog({ onAdded }: AddSubscriptionDialogProps) {
             )}
           </div>
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="mt-2 bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]"
-          >
-            {loading ? "Zapisywanie..." : "Zapisz subskrypcję"}
+          <Button type="submit" disabled={loading} className={`mt-2 ${primaryButtonClass}`}>
+            {loading ? "Zapisywanie..." : isEdit ? "Zapisz zmiany" : "Zapisz subskrypcję"}
           </Button>
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function AddSubscriptionDialog({ onAdded }: { onAdded: () => void }) {
+  return (
+    <SubscriptionFormDialog
+      onSaved={onAdded}
+      trigger={
+        <Button className={`gap-2 ${primaryButtonClass}`}>
+          <Plus className="h-4 w-4" />
+          Dodaj subskrypcję
+        </Button>
+      }
+    />
+  );
+}
+
+export function EditSubscriptionDialog({
+  subscription,
+  onUpdated,
+}: {
+  subscription: Subscription;
+  onUpdated: () => void;
+}) {
+  return (
+    <SubscriptionFormDialog
+      subscription={subscription}
+      onSaved={onUpdated}
+      trigger={
+        <button
+          aria-label={`Edytuj ${subscription.name}`}
+          className="text-muted-foreground transition-colors hover:text-emerald-400"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+      }
+    />
   );
 }
