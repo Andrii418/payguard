@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EditSubscriptionDialog } from "@/components/add-subscription-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,10 +21,10 @@ import type { Subscription } from "@/lib/use-subscriptions";
 interface SubscriptionListProps {
   subscriptions: Subscription[];
   loading: boolean;
-  onDeleted: () => void;
+  onChanged: () => void; // wywoływane po edycji LUB usunięciu
 }
 
-export function SubscriptionList({ subscriptions, loading, onDeleted }: SubscriptionListProps) {
+export function SubscriptionList({ subscriptions, loading, onChanged }: SubscriptionListProps) {
   async function handleDelete(sub: Subscription) {
     const { error } = await supabase.from("subscriptions").delete().eq("id", sub.id);
 
@@ -33,7 +34,7 @@ export function SubscriptionList({ subscriptions, loading, onDeleted }: Subscrip
     }
 
     toast.success(`Usunięto "${sub.name}".`);
-    onDeleted();
+    onChanged();
   }
 
   if (loading) {
@@ -78,10 +79,15 @@ export function SubscriptionList({ subscriptions, loading, onDeleted }: Subscrip
               </span>
             </span>
 
+            <EditSubscriptionDialog subscription={sub} onUpdated={onChanged} />
+
             <AlertDialog>
               <AlertDialogTrigger
                 render={
-                  <button className="text-muted-foreground transition-colors hover:text-red-400">
+                  <button
+                    aria-label={`Usuń ${sub.name}`}
+                    className="text-muted-foreground transition-colors hover:text-red-400"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 }
