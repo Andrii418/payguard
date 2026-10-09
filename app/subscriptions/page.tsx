@@ -1,21 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuthGuard } from "@/lib/use-auth-guard";
 import { useSubscriptions } from "@/lib/use-subscriptions";
+import {
+  defaultFilters,
+  filterAndSortSubscriptions,
+  type SubscriptionFilters,
+} from "@/lib/filter-subscriptions";
 import { exportSubscriptionsToCsv } from "@/lib/export-csv";
 import { NavSidebar } from "@/components/nav-sidebar";
 import { AddSubscriptionDialog } from "@/components/add-subscription-dialog";
 import { SubscriptionList } from "@/components/subscription-list";
+import { SubscriptionFiltersBar } from "@/components/subscription-filters";
 import { LoadingScreen } from "@/components/loading-screen";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, SearchX } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SubscriptionsPage() {
   const checkingAuth = useAuthGuard();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [filters, setFilters] = useState<SubscriptionFilters>(defaultFilters);
   const { subscriptions, loading } = useSubscriptions(refreshKey);
+
+  // useMemo: filtrujemy/sortujemy ponownie tylko, gdy zmienią się dane lub filtry
+  const visibleSubscriptions = useMemo(
+    () => filterAndSortSubscriptions(subscriptions, filters),
+    [subscriptions, filters]
+  );
 
   if (checkingAuth) return <LoadingScreen />;
 
@@ -24,13 +37,18 @@ export default function SubscriptionsPage() {
     0
   );
 
+  const refresh = () => setRefreshKey((k) => k + 1);
+  const hasActiveFilters = filters.query !== "" || filters.category !== "all";
+  const noResults = !loading && subscriptions.length > 0 && visibleSubscriptions.length === 0;
+
   function handleExport() {
-    if (subscriptions.length === 0) {
+    if (visibleSubscriptions.length === 0) {
       toast.error("Brak subskrypcji do wyeksportowania.");
       return;
     }
-    exportSubscriptionsToCsv(subscriptions);
-    toast.success("Plik CSV został pobrany.");
+    // Eksportujemy to, co użytkownik aktualnie widzi (z uwzględnieniem filtrów)
+    exportSubscriptionsToCsv(visibleSubscriptions);
+    toast.success(`Pobrano plik CSV (${visibleSubscriptions.length} pozycji).`);
   }
 
   return (
@@ -54,16 +72,43 @@ export default function SubscriptionsPage() {
               <Download className="h-4 w-4" />
               Eksportuj CSV
             </Button>
-            <AddSubscriptionDialog onAdded={() => setRefreshKey((k) => k + 1)} />
+            <AddSubscriptionDialog onAdded={refresh} />
           </div>
         </header>
 
         <section className="glass-card p-6">
-          <SubscriptionList
-            subscriptions={subscriptions}
-            loading={loading}
-            onDeleted={() => setRefreshKey((k) => k + 1)}
-          />
+          {subscriptions.length > 0 && (
+            <SubscriptionFiltersBar
+              filters={filters}
+              onChange={setFilters}
+              shown={visibleSubscriptions.length}
+              total={subscriptions.length}
+            />
+          )}
+
+          {noResults ? (
+            <div className="flex flex-col items-center gap-3 py-10 text-center">
+              <SearchX className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                Żadna subskrypcja nie pasuje do wybranych filtrów.
+              </p>
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  onClick={() => setFilters(defaultFilters)}
+                  className="border-emerald-500/20 text-foreground hover:bg-white/[0.04]"
+                >
+                  Wyczyść filtry
+                </Button>
+              )}
+            </div>
+          ) : (
+            <SubscriptionList
+              subscriptions={visibleSubscriptions}
+              loading={loading}
+              onChanged={refresh}
+            />
+          )}
         </section>
       </main>
     </div>
