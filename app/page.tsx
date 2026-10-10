@@ -6,6 +6,7 @@ import { LandingNavbar } from "@/components/landing-navbar";
 import { DashboardPreview } from "@/components/dashboard-preview";
 import { Button } from "@/components/ui/button";
 import { Sparkles, BarChart3, ShieldCheck, Zap, Check, ArrowRight } from "lucide-react";
+import { DemoButton } from "@/components/demo-button";
 
 const features = [
   {
@@ -80,14 +81,13 @@ export default function LandingPage() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <a href="#features">
-              <Button size="lg" variant="outline" className="border-emerald-500/20 text-foreground hover:bg-white/[0.04]">
-                Zobacz funkcje
-              </Button>
-            </a>
+                        <DemoButton
+              size="lg"
+              className="border-emerald-500/20 text-foreground hover:bg-white/[0.04]"
+            />
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">
-            Bez karty kredytowej. Plan darmowy dostępny od razu.
+                    <p className="mt-4 text-xs text-muted-foreground">
+            Bez rejestracji: kliknij „Wypróbuj demo” i zobacz aplikację z przykładowymi danymi.
           </p>
         </motion.div>
 
