@@ -1,9 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { LayoutDashboard, Wallet, Sparkles, Settings, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
+import {
+  LayoutDashboard,
+  Wallet,
+  Sparkles,
+  Settings,
+  ShieldCheck,
+  FlaskConical,
+} from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { resetDemoData } from "@/lib/demo";
+import { useIsDemoUser } from "@/lib/use-demo-user";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Przegląd" },
@@ -18,6 +30,29 @@ interface NavSidebarProps {
 
 export function NavSidebar({ monthlyCost }: NavSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const isDemo = useIsDemoUser();
+  const [resetting, setResetting] = useState(false);
+
+  async function handleCreateAccount() {
+    // Sesja demo jest tymczasowa, więc wylogowujemy i prowadzimy do rejestracji.
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
+
+  async function handleReset() {
+    setResetting(true);
+    const { error } = await resetDemoData();
+
+    if (error) {
+      setResetting(false);
+      toast.error("Nie udało się zresetować danych demo.", { description: error });
+      return;
+    }
+
+    toast.success("Dane demo zostały zresetowane.");
+    window.location.reload();
+  }
 
   return (
     <aside className="flex h-screen w-64 flex-col justify-between border-r border-emerald-500/10 bg-white/[0.02] p-6">
@@ -31,7 +66,7 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
 
         <nav className="flex flex-col gap-1">
           {navItems.map(({ href, icon: Icon, label }) => {
-            const isActive = href.startsWith("/#") ? false : pathname === href;
+            const isActive = href.includes("#") ? false : pathname === href;
 
             return (
               <Link
@@ -58,11 +93,40 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
         </nav>
       </div>
 
-      <div className="glass-card p-4">
-        <p className="text-xs text-muted-foreground">Miesięczne wydatki</p>
-        <p className="font-mono text-lg font-semibold tabular-nums text-foreground">
-          {monthlyCost !== undefined ? `${monthlyCost.toFixed(2)} zł` : "—"}
-        </p>
+      <div className="flex flex-col gap-4">
+        {isDemo && (
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/[0.06] p-4">
+            <div className="mb-1 flex items-center gap-2 text-emerald-400">
+              <FlaskConical className="h-4 w-4" />
+              <span className="text-xs font-semibold uppercase tracking-wide">Tryb demo</span>
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Oglądasz przykładowe dane. Możesz je swobodnie edytować i usuwać.
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleCreateAccount}
+                className="rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-obsidian transition-all hover:bg-emerald-500/90 active:scale-[0.97]"
+              >
+                Załóż konto
+              </button>
+              <button
+                onClick={handleReset}
+                disabled={resetting}
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+              >
+                {resetting ? "Resetuję..." : "Resetuj dane demo"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="glass-card p-4">
+          <p className="text-xs text-muted-foreground">Miesięczne wydatki</p>
+          <p className="font-mono text-lg font-semibold tabular-nums text-foreground">
+            {monthlyCost !== undefined ? `${monthlyCost.toFixed(2)} zł` : "—"}
+          </p>
+        </div>
       </div>
     </aside>
   );
