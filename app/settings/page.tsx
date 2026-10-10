@@ -29,7 +29,7 @@ export default function SettingsPage() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
 
-      setEmail(userData.user.email ?? null);
+      setEmail(userData.user.email ?? "Konto demo (anonimowe)");
 
       const { data: profile } = await supabase
         .from("profiles")

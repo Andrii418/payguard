@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Crown, Loader2, Settings2 } from "lucide-react";
 import { toast } from "sonner";
+import { useIsDemoUser } from "@/lib/use-demo-user";
 
 export function SubscriptionPlanCard() {
   const [status, setStatus] = useState<"free" | "pro" | null>(null);
@@ -12,6 +13,7 @@ export function SubscriptionPlanCard() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
+  const isDemo = useIsDemoUser();
 
   useEffect(() => {
     async function loadProfile() {
@@ -34,6 +36,10 @@ export function SubscriptionPlanCard() {
   }, []);
 
   async function handleUpgrade() {
+        if (isDemo) {
+      toast.info("W trybie demo płatności są wyłączone. Załóż konto, żeby przejść na Pro.");
+      return;
+    }
     if (!userId || !email) return;
     setLoading(true);
 
