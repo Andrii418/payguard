@@ -1,25 +1,36 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { CalendarClock, Layers, PiggyBank, TrendingUp } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuthGuard } from "@/lib/use-auth-guard";
 import { useSubscriptions } from "@/lib/use-subscriptions";
+import {
+  activeCategories,
+  nextRenewal,
+  possibleSavings,
+  totalMonthly,
+} from "@/lib/analytics";
 import { NavSidebar } from "@/components/nav-sidebar";
+import { LoadingScreen } from "@/components/loading-screen";
+import { AddSubscriptionDialog } from "@/components/add-subscription-dialog";
+import { BudgetAlertBanner } from "@/components/budget-alert-banner";
+import { DashboardHero } from "@/components/dashboard-hero";
 import { KpiCard } from "@/components/kpi-card";
-import { SpendingCharts } from "@/components/spending-charts";
+import { CategoryChartCard, BurnRateChartCard } from "@/components/spending-charts";
 import { UpcomingRenewals } from "@/components/upcoming-renewals";
 import { AiAdvisorCard } from "@/components/ai-advisor-card";
-import { SubscriptionPlanCard } from "@/components/subscription-plan-card";
-import { BudgetAlertBanner } from "@/components/budget-alert-banner";
-import { LoadingScreen } from "@/components/loading-screen";
-import { Wallet, TrendingDown, CalendarClock, Layers } from "lucide-react";
-import { toast } from "sonner";
 
 export default function DashboardPage() {
   const checkingAuth = useAuthGuard();
-  const { subscriptions } = useSubscriptions(0);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { subscriptions } = useSubscriptions(refreshKey);
   const [budgetLimit, setBudgetLimit] = useState<number | null>(null);
   const hasWarnedRef = useRef(false);
+
+  const monthlyCost = totalMonthly(subscriptions);
+  const isOverBudget = budgetLimit !== null && monthlyCost > budgetLimit;
 
   useEffect(() => {
     if (checkingAuth) return;
@@ -37,13 +48,6 @@ export default function DashboardPage() {
     });
   }, [checkingAuth]);
 
-  const monthlyCost = subscriptions.reduce(
-    (sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12),
-    0
-  );
-
-  const isOverBudget = budgetLimit !== null && monthlyCost > budgetLimit;
-
   useEffect(() => {
     if (isOverBudget && !hasWarnedRef.current) {
       toast.warning("Przekroczyłeś swój miesięczny limit budżetu!", {
@@ -51,90 +55,102 @@ export default function DashboardPage() {
       });
       hasWarnedRef.current = true;
     }
-    if (!isOverBudget) {
-      hasWarnedRef.current = false;
-    }
+    if (!isOverBudget) hasWarnedRef.current = false;
   }, [isOverBudget, monthlyCost, budgetLimit]);
 
   if (checkingAuth) return <LoadingScreen />;
 
-  const categoryGroups = subscriptions.reduce<Record<string, number[]>>((acc, s) => {
-    const monthly = s.billing_cycle === "monthly" ? s.price : s.price / 12;
-    acc[s.category] = acc[s.category] ? [...acc[s.category], monthly] : [monthly];
-    return acc;
-  }, {});
-
-  const possibleSavings = Object.values(categoryGroups).reduce((sum, prices) => {
-    if (prices.length <= 1) return sum;
-    const [, ...duplicates] = [...prices].sort((a, b) => a - b);
-    return sum + duplicates.reduce((s, p) => s + p, 0);
-  }, 0);
-
-  const today = new Date();
-  const nextRenewalDays =
-    subscriptions
-      .map((s) => Math.ceil((new Date(s.next_renewal).getTime() - today.getTime()) / 86400000))
-      .filter((d) => d >= 0)
-      .sort((a, b) => a - b)[0] ?? 0;
+  const refresh = () => setRefreshKey((k) => k + 1);
+  const savings = possibleSavings(subscriptions);
+  const next = nextRenewal(subscriptions);
+  const categoryCount = activeCategories(subscriptions).length;
+  const today = new Date().toLocaleDateString("pl-PL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen">
       <NavSidebar monthlyCost={monthlyCost} />
 
-      <main className="flex-1 p-8">
-        <header className="mb-8">
-          <h1 className="font-display text-2xl font-semibold text-foreground">
-            Przegląd finansowy
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Twoje subskrypcje pod kontrolą — na żywo.
-          </p>
+      <main className="min-w-0 flex-1 p-6 lg:p-8">
+        <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm capitalize text-muted-foreground">{today}</p>
+            <h1 className="font-display text-3xl font-semibold text-foreground">Przegląd finansowy</h1>
+          </div>
+          <AddSubscriptionDialog onAdded={refresh} />
         </header>
 
         {isOverBudget && budgetLimit !== null && (
           <BudgetAlertBanner monthlyCost={monthlyCost} budgetLimit={budgetLimit} />
         )}
 
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard
-            label="Miesięczny koszt"
-            value={Math.round(monthlyCost * 100) / 100}
-            suffix=" zł"
-            icon={Wallet}
-            glow
-            index={0}
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+          <DashboardHero
+            subscriptions={subscriptions}
+            monthlyCost={monthlyCost}
+            budgetLimit={budgetLimit}
           />
-          <KpiCard label="Aktywne subskrypcje" value={subscriptions.length} icon={Layers} index={1} />
-          <KpiCard
-            label="Możliwe oszczędności"
-            value={Math.round(possibleSavings * 100) / 100}
-            suffix=" zł"
-            icon={TrendingDown}
-            index={2}
-          />
-          <KpiCard
-            label="Najbliższe odnowienie"
-            value={nextRenewalDays}
-            suffix=" dni"
-            icon={CalendarClock}
-            index={3}
-          />
+
+          <div className="grid grid-cols-2 auto-rows-fr gap-4 lg:col-span-2">
+            <KpiCard
+              label="Aktywne subskrypcje"
+              value={subscriptions.length}
+              icon={Layers}
+              accent="sky"
+              hint={`w ${categoryCount} ${categoryCount === 1 ? "kategorii" : "kategoriach"}`}
+              index={0}
+            />
+            <KpiCard
+              label="Możliwe oszczędności"
+              value={savings}
+              decimals={2}
+              suffix="zł"
+              icon={PiggyBank}
+              accent="emerald"
+              hint="na podstawie nakładających się usług"
+              index={1}
+            />
+            <KpiCard
+              label="Najbliższe odnowienie"
+              value={next?.days ?? 0}
+              suffix="dni"
+              icon={CalendarClock}
+              accent="amber"
+              hint={next?.name ?? "brak zaplanowanych"}
+              index={2}
+            />
+            <KpiCard
+              label="Projekcja roczna"
+              value={monthlyCost * 12}
+              decimals={0}
+              suffix="zł"
+              icon={TrendingUp}
+              accent="violet"
+              hint="przy obecnych subskrypcjach"
+              index={3}
+            />
+          </div>
         </section>
 
-        <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <SpendingCharts subscriptions={subscriptions} />
+        <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <CategoryChartCard subscriptions={subscriptions} />
+          </div>
+          <div className="lg:col-span-3">
+            <BurnRateChartCard subscriptions={subscriptions} />
+          </div>
         </section>
 
-        <section className="mt-6">
-          <UpcomingRenewals subscriptions={subscriptions} />
-        </section>
-
-        <section id="advisor" className="mt-6 scroll-mt-8">
-          <AiAdvisorCard subscriptions={subscriptions} />
-        </section>
-
-        <section className="mt-6">
-          <SubscriptionPlanCard />
+        <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <UpcomingRenewals subscriptions={subscriptions} />
+          </div>
+          <div id="advisor" className="scroll-mt-8 lg:col-span-3">
+            <AiAdvisorCard subscriptions={subscriptions} />
+          </div>
         </section>
       </main>
     </div>

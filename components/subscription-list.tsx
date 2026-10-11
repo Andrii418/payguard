@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditSubscriptionDialog } from "@/components/add-subscription-dialog";
+import { getCategoryMeta } from "@/lib/category-meta";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,8 +68,13 @@ export function SubscriptionList({ subscriptions, loading, onChanged }: Subscrip
         <div key={sub.id} className="flex items-center justify-between py-3">
           <div>
             <p className="font-medium text-foreground">{sub.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {sub.category} · odnowienie {new Date(sub.next_renewal).toLocaleDateString("pl-PL")}
+                        <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: getCategoryMeta(sub.category).color }}
+              />
+              {getCategoryMeta(sub.category).label} · odnowienie{" "}
+              {new Date(sub.next_renewal).toLocaleDateString("pl-PL")}
             </p>
           </div>
           <div className="flex items-center gap-4">

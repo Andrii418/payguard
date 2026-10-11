@@ -55,7 +55,7 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
   }
 
   return (
-    <aside className="flex h-screen w-64 flex-col justify-between border-r border-emerald-500/10 bg-white/[0.02] p-6">
+        <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col justify-between border-r border-emerald-500/10 bg-white/[0.02] p-6">
       <div>
         <div className="mb-10 flex items-center gap-2">
           <ShieldCheck className="h-6 w-6 text-emerald-400" />
