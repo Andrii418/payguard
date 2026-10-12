@@ -60,3 +60,8 @@ export const budgetLimitSchema = z
 export const billingPortalSchema = z.object({
   userId: z.string().uuid("Nieprawidłowy identyfikator użytkownika."),
 });
+// --- Logowanie / rejestracja ---
+export const authSchema = z.object({
+  email: z.string().trim().email("Podaj poprawny adres e-mail."),
+  password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków."),
+});
