@@ -181,3 +181,78 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ===== Landing / logowanie: dodatki wizualne ===== */
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Siatka w tle, zanikająca ku brzegom */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 30%, transparent 75%);
+}
+
+/* Gradientowy tekst w nagłówkach */
+.text-gradient {
+  background-image: linear-gradient(110deg, #34d399 0%, #38bdf8 45%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Aurora: trzy wolno dryfujące plamy światła */
+@keyframes aurora-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(8%, 6%, 0) scale(1.15); }
+}
+@keyframes aurora-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.1); }
+  50% { transform: translate3d(-10%, 8%, 0) scale(0.95); }
+}
+@keyframes aurora-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6%, -8%, 0) scale(1.2); }
+}
+.animate-aurora-a { animation: aurora-a 18s ease-in-out infinite; }
+.animate-aurora-b { animation: aurora-b 22s ease-in-out infinite; }
+.animate-aurora-c { animation: aurora-c 26s ease-in-out infinite; }
+
+/* Przewijany pasek (marquee) */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee { animation: marquee 45s linear infinite; }
+.animate-marquee:hover { animation-play-state: paused; }
+
+/* Pływające powiadomienia w podglądzie produktu */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+.animate-float { animation: float-y 6s ease-in-out infinite; }
+
+/* Przycisk z "błyskiem" przy najechaniu */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+.btn-shine:hover::after {
+  transform: translateX(120%);
+  transition: transform 0.7s ease;
+}
