@@ -42,13 +42,26 @@ interface SubscriptionFormDialogProps {
   subscription?: Subscription; // brak = tryb dodawania, jest = tryb edycji
   trigger: React.ReactElement;
   onSaved: () => void;
+  open?: boolean; // opcjonalne sterowanie z zewnatrz
+  onOpenChange?: (open: boolean) => void;
 }
 
 // Jeden formularz obsługujący OBA tryby - reguły walidacji i wygląd w jednym miejscu.
-function SubscriptionFormDialog({ subscription, trigger, onSaved }: SubscriptionFormDialogProps) {
+function SubscriptionFormDialog({
+  subscription,
+  trigger,
+  onSaved,
+  open: controlledOpen,
+  onOpenChange,
+}: SubscriptionFormDialogProps) {
   const isEdit = !!subscription;
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (value: boolean) => {
+    setInternalOpen(value);
+    onOpenChange?.(value);
+  };
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("other");
@@ -241,10 +254,20 @@ function SubscriptionFormDialog({ subscription, trigger, onSaved }: Subscription
   );
 }
 
-export function AddSubscriptionDialog({ onAdded }: { onAdded: () => void }) {
+export function AddSubscriptionDialog({
+  onAdded,
+  open,
+  onOpenChange,
+}: {
+  onAdded: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
   return (
     <SubscriptionFormDialog
       onSaved={onAdded}
+      open={open}
+      onOpenChange={onOpenChange}
       trigger={
         <Button className={`gap-2 ${primaryButtonClass}`}>
           <Plus className="h-4 w-4" />
