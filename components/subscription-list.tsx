@@ -1,11 +1,11 @@
 "use client";
 
-import { supabase } from "@/lib/supabase";
+import { AnimatePresence, motion } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EditSubscriptionDialog } from "@/components/add-subscription-dialog";
-import { getCategoryMeta } from "@/lib/category-meta";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,107 +18,235 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import type { Subscription } from "@/lib/use-subscriptions";
+import { daysUntil, formatPLN, monthlyEquivalent } from "@/lib/analytics";
+import { getCategoryMeta } from "@/lib/category-meta";
 
-interface SubscriptionListProps {
-  subscriptions: Subscription[];
-  loading: boolean;
-  onChanged: () => void; // wywoływane po edycji LUB usunięciu
+export type ViewMode = "list" | "grid";
+
+function renewalInfo(days: number) {
+  if (days < 0) return { text: "termin minął", cls: "bg-red-500/10 text-red-300" };
+  if (days === 0) return { text: "dziś", cls: "bg-red-500/10 text-red-300" };
+  if (days === 1) return { text: "jutro", cls: "bg-red-500/10 text-red-300" };
+  if (days <= 3) return { text: `za ${days} dni`, cls: "bg-red-500/10 text-red-300" };
+  if (days <= 7) return { text: `za ${days} dni`, cls: "bg-amber-500/10 text-amber-300" };
+  return { text: `za ${days} dni`, cls: "bg-white/[0.05] text-muted-foreground" };
 }
 
-export function SubscriptionList({ subscriptions, loading, onChanged }: SubscriptionListProps) {
-  async function handleDelete(sub: Subscription) {
-    const { error } = await supabase.from("subscriptions").delete().eq("id", sub.id);
+function DeleteSubscriptionButton({
+  subscription,
+  onDeleted,
+}: {
+  subscription: Subscription;
+  onDeleted: () => void;
+}) {
+  async function handleDelete() {
+    const { error } = await supabase.from("subscriptions").delete().eq("id", subscription.id);
 
     if (error) {
       toast.error("Nie udało się usunąć subskrypcji.", { description: error.message });
       return;
     }
 
-    toast.success(`Usunięto "${sub.name}".`);
-    onChanged();
+    toast.success(`Usunięto "${subscription.name}".`);
+    onDeleted();
   }
 
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger
+        render={
+          <button
+            aria-label={`Usuń ${subscription.name}`}
+            className="text-muted-foreground transition-colors hover:text-red-400"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        }
+      />
+      <AlertDialogContent className="glass-card border-emerald-500/20">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="font-display">Usunąć subskrypcję?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Na pewno chcesz usunąć &quot;{subscription.name}&quot;? Tej akcji nie można cofnąć.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Anuluj</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} className="bg-red-500 text-white hover:bg-red-500/90">
+            Usuń
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+interface ItemProps {
+  sub: Subscription;
+  totalMonthlyCost: number;
+  onChanged: () => void;
+}
+
+// Na desktopie akcje pojawiaja sie po najechaniu, na telefonie sa zawsze widoczne.
+const actionsClass =
+  "flex items-center gap-3 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100";
+
+function SubscriptionRow({ sub, totalMonthlyCost, onChanged }: ItemProps) {
+  const meta = getCategoryMeta(sub.category);
+  const monthly = monthlyEquivalent(sub);
+  const share = totalMonthlyCost > 0 ? monthly / totalMonthlyCost : 0;
+  const renewal = renewalInfo(daysUntil(sub.next_renewal));
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.25 }}
+      className="group flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 transition-colors hover:border-emerald-500/20 hover:bg-white/[0.04]"
+    >
+      <div
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-display text-base font-semibold"
+        style={{ backgroundColor: `${meta.color}1F`, color: meta.color }}
+      >
+        {sub.name.charAt(0).toUpperCase()}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <p className="truncate font-medium text-foreground">{sub.name}</p>
+          <span
+            className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+            style={{ backgroundColor: `${meta.color}1A`, color: meta.color }}
+          >
+            {meta.short}
+          </span>
+        </div>
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          {new Date(`${sub.next_renewal}T00:00:00`).toLocaleDateString("pl-PL")}
+          <span>·</span>
+          {sub.billing_cycle === "monthly" ? "co miesiąc" : "co rok"}
+          <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] ${renewal.cls}`}>{renewal.text}</span>
+        </p>
+      </div>
+
+      <div className="w-32 shrink-0 text-right">
+        <p className="font-mono text-sm font-semibold tabular-nums text-foreground">{formatPLN(monthly)}</p>
+        <p className="text-[10px] text-muted-foreground">
+          {sub.billing_cycle === "yearly" ? `${formatPLN(sub.price)} / rok` : "/ mies."}
+        </p>
+        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="h-full rounded-full" style={{ width: `${share * 100}%`, backgroundColor: meta.color }} />
+        </div>
+      </div>
+
+      <div className={actionsClass}>
+        <EditSubscriptionDialog subscription={sub} onUpdated={onChanged} />
+        <DeleteSubscriptionButton subscription={sub} onDeleted={onChanged} />
+      </div>
+    </motion.div>
+  );
+}
+
+function SubscriptionCard({ sub, totalMonthlyCost, onChanged }: ItemProps) {
+  const meta = getCategoryMeta(sub.category);
+  const monthly = monthlyEquivalent(sub);
+  const share = totalMonthlyCost > 0 ? monthly / totalMonthlyCost : 0;
+  const renewal = renewalInfo(daysUntil(sub.next_renewal));
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: 0.25 }}
+      className="glass-card group flex flex-col p-5"
+    >
+      <div className="mb-4 flex items-start justify-between">
+        <div
+          className="flex h-12 w-12 items-center justify-center rounded-xl font-display text-lg font-semibold"
+          style={{ backgroundColor: `${meta.color}1F`, color: meta.color }}
+        >
+          {sub.name.charAt(0).toUpperCase()}
+        </div>
+        <div className={actionsClass}>
+          <EditSubscriptionDialog subscription={sub} onUpdated={onChanged} />
+          <DeleteSubscriptionButton subscription={sub} onDeleted={onChanged} />
+        </div>
+      </div>
+
+      <p className="truncate font-display text-lg font-semibold text-foreground">{sub.name}</p>
+      <span
+        className="mt-1.5 w-fit rounded-full px-2 py-0.5 text-[10px] font-medium"
+        style={{ backgroundColor: `${meta.color}1A`, color: meta.color }}
+      >
+        {meta.label}
+      </span>
+
+      <p className="mt-5 font-mono text-2xl font-semibold tabular-nums text-foreground">{formatPLN(monthly)}</p>
+      <p className="text-xs text-muted-foreground">
+        {sub.billing_cycle === "yearly" ? `${formatPLN(sub.price)} rocznie, w przeliczeniu na miesiąc` : "miesięcznie"}
+      </p>
+
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+        <div className="h-full rounded-full" style={{ width: `${share * 100}%`, backgroundColor: meta.color }} />
+      </div>
+      <p className="mt-1 text-[10px] text-muted-foreground">{Math.round(share * 100)}% Twoich wydatków</p>
+
+      <div className="mt-5 flex items-center justify-between border-t border-white/[0.06] pt-4 text-xs text-muted-foreground">
+        <span>{new Date(`${sub.next_renewal}T00:00:00`).toLocaleDateString("pl-PL")}</span>
+        <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] ${renewal.cls}`}>{renewal.text}</span>
+      </div>
+    </motion.div>
+  );
+}
+
+interface SubscriptionListProps {
+  subscriptions: Subscription[];
+  loading: boolean;
+  view: ViewMode;
+  totalMonthlyCost: number;
+  onChanged: () => void;
+}
+
+export function SubscriptionList({
+  subscriptions,
+  loading,
+  view,
+  totalMonthlyCost,
+  onChanged,
+}: SubscriptionListProps) {
   if (loading) {
-    return (
-      <div className="flex flex-col divide-y divide-emerald-500/10">
+    return view === "grid" ? (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="flex items-center justify-between py-3">
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-4 w-32 bg-white/[0.05]" />
-              <Skeleton className="h-3 w-48 bg-white/[0.04]" />
-            </div>
-            <Skeleton className="h-4 w-16 bg-white/[0.05]" />
-          </div>
+          <Skeleton key={i} className="h-56 rounded-2xl bg-white/[0.04]" />
+        ))}
+      </div>
+    ) : (
+      <div className="flex flex-col gap-2.5">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-[74px] rounded-xl bg-white/[0.04]" />
         ))}
       </div>
     );
   }
 
-  if (subscriptions.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Nie masz jeszcze żadnych subskrypcji — dodaj pierwszą powyżej.
-      </p>
-    );
-  }
+  const Item = view === "grid" ? SubscriptionCard : SubscriptionRow;
 
   return (
-    <div className="flex flex-col divide-y divide-emerald-500/10">
-      {subscriptions.map((sub) => (
-        <div key={sub.id} className="flex items-center justify-between py-3">
-          <div>
-            <p className="font-medium text-foreground">{sub.name}</p>
-                        <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: getCategoryMeta(sub.category).color }}
-              />
-              {getCategoryMeta(sub.category).label} · odnowienie{" "}
-              {new Date(sub.next_renewal).toLocaleDateString("pl-PL")}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="font-mono text-sm text-emerald-400">
-              {sub.price.toFixed(2)} zł
-              <span className="text-muted-foreground">
-                /{sub.billing_cycle === "monthly" ? "mies." : "rok"}
-              </span>
-            </span>
-
-            <EditSubscriptionDialog subscription={sub} onUpdated={onChanged} />
-
-            <AlertDialog>
-              <AlertDialogTrigger
-                render={
-                  <button
-                    aria-label={`Usuń ${sub.name}`}
-                    className="text-muted-foreground transition-colors hover:text-red-400"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                }
-              />
-              <AlertDialogContent className="glass-card border-emerald-500/20">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="font-display">Usunąć subskrypcję?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Na pewno chcesz usunąć &quot;{sub.name}&quot;? Tej akcji nie można cofnąć.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => handleDelete(sub)}
-                    className="bg-red-500 text-white hover:bg-red-500/90"
-                  >
-                    Usuń
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </div>
-      ))}
+    <div
+      className={
+        view === "grid" ? "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-2.5"
+      }
+    >
+      <AnimatePresence initial={false} mode="popLayout">
+        {subscriptions.map((sub) => (
+          <Item key={sub.id} sub={sub} totalMonthlyCost={totalMonthlyCost} onChanged={onChanged} />
+        ))}
+      </AnimatePresence>
     </div>
   );
 }
