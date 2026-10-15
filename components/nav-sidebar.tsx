@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import {
   LayoutDashboard,
   Wallet,
+  Receipt,
   Sparkles,
   Settings,
   ShieldCheck,
@@ -22,6 +23,7 @@ import { CommandPalette, OPEN_PALETTE_EVENT } from "@/components/command-palette
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Przegląd" },
   { href: "/subscriptions", icon: Wallet, label: "Subskrypcje" },
+  { href: "/expenses", icon: Receipt, label: "Wydatki" },
   { href: "/dashboard#advisor", icon: Sparkles, label: "Doradca AI" },
   { href: "/settings", icon: Settings, label: "Ustawienia" },
 ];
