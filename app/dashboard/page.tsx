@@ -6,6 +6,7 @@ import { CalendarClock, Layers, PiggyBank, TrendingUp } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuthGuard } from "@/lib/use-auth-guard";
 import { useSubscriptions } from "@/lib/use-subscriptions";
+import { MonthBudgetCard } from "@/components/month-budget-card";
 import {
   activeCategories,
   nextRenewal,
@@ -133,6 +134,10 @@ export default function DashboardPage() {
               index={3}
             />
           </div>
+        </section>
+
+        <section className="mt-4">
+          <MonthBudgetCard subscriptionsMonthly={monthlyCost} />
         </section>
 
         <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-5">
