@@ -256,3 +256,25 @@
   transform: translateX(120%);
   transition: transform 0.7s ease;
 }
+/* ===== Mobile: poprawki globalne ===== */
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Siatka bezpieczeństwa: zabłąkany element nigdy nie wywoła poziomego przewijania strony.
+   "clip" (w odróżnieniu od "hidden") nie psuje position: sticky. */
+body {
+  overflow-x: clip;
+}
+
+/* iOS Safari przybliża stronę po kliknięciu w pole o czcionce mniejszej niż 16px.
+   Ta reguła działa tylko na telefonach, na komputerze pola wyglądają jak dotąd. */
+@media (max-width: 639px) {
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

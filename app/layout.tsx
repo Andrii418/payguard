@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -23,6 +23,11 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "PayGuard — Inteligentny Menedżer Subskrypcji",
   description: "Analizuj wydatki, przewiduj odnowienia i oszczędzaj dzięki AI.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#090A0F",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({
