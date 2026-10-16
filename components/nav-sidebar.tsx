@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   LayoutDashboard,
@@ -14,6 +14,8 @@ import {
   ShieldCheck,
   FlaskConical,
   Search,
+  Menu,
+  X,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { resetDemoData } from "@/lib/demo";
@@ -37,6 +39,42 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
   const router = useRouter();
   const isDemo = useIsDemoUser();
   const [resetting, setResetting] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  // Panel jest "otwarty dla konkretnej ścieżki": po przejściu na inną stronę zamyka się sam.
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const open = openFor === pathname;
+  const openDrawer = () => setOpenFor(pathname);
+  const closeDrawer = () => setOpenFor(null);
+
+  const openPalette = () => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT));
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden"; // blokada przewijania tła pod panelem
+    closeRef.current?.focus();
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpenFor(null);
+    }
+
+    // Po obróceniu telefonu / powiększeniu okna do układu desktopowego panel jest niepotrzebny.
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    function onBreakpoint() {
+      if (desktop.matches) setOpenFor(null);
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    desktop.addEventListener("change", onBreakpoint);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+      desktop.removeEventListener("change", onBreakpoint);
+    };
+  }, [open]);
 
   async function handleCreateAccount() {
     await supabase.auth.signOut();
@@ -57,24 +95,44 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
     window.location.reload();
   }
 
-  return (
-    <>
-      <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col justify-between border-r border-emerald-500/10 bg-white/[0.02] p-6">
+  // Ta sama zawartość w menu desktopowym i w wysuwanym panelu - bez kopiowania kodu.
+  function renderBody(variant: "desktop" | "drawer") {
+    const mobile = variant === "drawer";
+
+    return (
+      <>
         <div>
-          <div className="mb-6 flex items-center gap-2">
-            <ShieldCheck className="h-6 w-6 text-emerald-400" />
-            <span className="font-display text-lg font-semibold tracking-tight text-foreground">
-              PayGuard
-            </span>
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-6 w-6 text-emerald-400" />
+              <span className="font-display text-lg font-semibold tracking-tight text-foreground">
+                PayGuard
+              </span>
+            </div>
+            {mobile && (
+              <button
+                ref={closeRef}
+                onClick={closeDrawer}
+                aria-label="Zamknij menu"
+                className="-mr-2 flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
           </div>
 
           <button
-            onClick={() => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))}
-            className="mb-6 flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-emerald-500/30 hover:text-foreground"
+            onClick={() => {
+              closeDrawer();
+              openPalette();
+            }}
+            className="mb-6 flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:border-emerald-500/30 hover:text-foreground"
           >
             <Search className="h-4 w-4" />
             <span className="flex-1 text-left">Szukaj...</span>
-            <kbd className="rounded border border-white/10 px-1.5 font-mono text-[10px]">Ctrl K</kbd>
+            {!mobile && (
+              <kbd className="rounded border border-white/10 px-1.5 font-mono text-[10px]">Ctrl K</kbd>
+            )}
           </button>
 
           <nav className="flex flex-col gap-1">
@@ -85,13 +143,14 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
                 <Link
                   key={label}
                   href={href}
-                  className={`group relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-2.5 text-sm transition-colors duration-200 ${
-                    isActive ? "text-emerald-400" : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  onClick={closeDrawer}
+                  className={`group relative flex items-center gap-3 overflow-hidden rounded-lg px-3 text-sm transition-colors duration-200 ${
+                    mobile ? "py-3" : "py-2.5"
+                  } ${isActive ? "text-emerald-400" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   {isActive ? (
                     <motion.span
-                      layoutId="nav-active-bg"
+                      layoutId={mobile ? "nav-active-bg-mobile" : "nav-active-bg"}
                       className="absolute inset-0 rounded-lg bg-emerald-500/10"
                       transition={{ type: "spring", stiffness: 350, damping: 30 }}
                     />
@@ -106,7 +165,7 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
           </nav>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="mt-8 flex flex-col gap-4">
           {isDemo && (
             <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/[0.06] p-4">
               <div className="mb-1 flex items-center gap-2 text-emerald-400">
@@ -119,14 +178,14 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
               <div className="flex flex-col gap-2">
                 <button
                   onClick={handleCreateAccount}
-                  className="rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-obsidian transition-all hover:bg-emerald-500/90 active:scale-[0.97]"
+                  className="rounded-md bg-emerald-500 px-3 py-2 text-xs font-semibold text-obsidian transition-all hover:bg-emerald-500/90 active:scale-[0.97]"
                 >
                   Załóż konto
                 </button>
                 <button
                   onClick={handleReset}
                   disabled={resetting}
-                  className="text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+                  className="py-1 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
                 >
                   {resetting ? "Resetuję..." : "Resetuj dane demo"}
                 </button>
@@ -141,7 +200,83 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
             </p>
           </div>
         </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {/* ===== Komputer (od 1024 px): menu boczne jak dotąd ===== */}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col justify-between border-r border-emerald-500/10 bg-white/[0.02] p-6 lg:flex">
+        {renderBody("desktop")}
       </aside>
+
+      {/* ===== Telefon / tablet: pasek górny z hamburgerem ===== */}
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 border-b border-white/[0.08] bg-obsidian/80 px-4 backdrop-blur-xl lg:hidden">
+        <button
+          onClick={openDrawer}
+          aria-label="Otwórz menu"
+          aria-expanded={open}
+          className="-ml-2 flex h-10 w-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-white/[0.06] active:scale-95"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-emerald-400" />
+          <span className="font-display text-base font-semibold text-foreground">PayGuard</span>
+        </Link>
+
+        {isDemo && (
+          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
+            Demo
+          </span>
+        )}
+
+        <button
+          onClick={openPalette}
+          aria-label="Szukaj"
+          className="-mr-2 ml-auto flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground active:scale-95"
+        >
+          <Search className="h-5 w-5" />
+        </button>
+      </header>
+
+      {/* ===== Wysuwany panel menu ===== */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="drawer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 lg:hidden"
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeDrawer} aria-hidden />
+
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu nawigacji"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 380, damping: 38 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={{ left: 0.4, right: 0 }}
+              onDragEnd={(_, info) => {
+                // Przesunięcie palcem w lewo zamyka panel
+                if (info.offset.x < -70 || info.velocity.x < -400) closeDrawer();
+              }}
+              className="absolute left-0 top-0 flex h-dvh w-[84%] max-w-[300px] flex-col justify-between overflow-y-auto border-r border-emerald-500/15 bg-[#0b0d13]/95 p-6 shadow-2xl shadow-black/60 backdrop-blur-xl"
+            >
+              {renderBody("drawer")}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <CommandPalette />
     </>
