@@ -57,7 +57,7 @@ function DeleteSubscriptionButton({
         render={
           <button
             aria-label={`Usuń ${subscription.name}`}
-            className="text-muted-foreground transition-colors hover:text-red-400"
+            className="-m-2 p-2 text-muted-foreground transition-colors hover:text-red-400 sm:m-0 sm:p-0"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -87,9 +87,13 @@ interface ItemProps {
   onChanged: () => void;
 }
 
-// Na desktopie akcje pojawiaja sie po najechaniu, na telefonie sa zawsze widoczne.
-const actionsClass =
-  "flex items-center gap-3 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100";
+// Telefon: akcje w osobnym rzędzie pod wierszem. Od 640 px: jak dotąd, z prawej strony,
+// a na desktopie (md+) pojawiają się po najechaniu.
+const rowActionsClass =
+  "flex basis-full items-center justify-end gap-6 border-t border-white/[0.06] pt-2.5 transition-opacity sm:basis-auto sm:justify-start sm:gap-3 sm:border-0 sm:pt-0 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100";
+
+const cardActionsClass =
+  "flex items-center gap-5 transition-opacity sm:gap-3 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100";
 
 function SubscriptionRow({ sub, totalMonthlyCost, onChanged }: ItemProps) {
   const meta = getCategoryMeta(sub.category);
@@ -104,7 +108,7 @@ function SubscriptionRow({ sub, totalMonthlyCost, onChanged }: ItemProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.25 }}
-      className="group flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 transition-colors hover:border-emerald-500/20 hover:bg-white/[0.04]"
+      className="group flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 transition-colors hover:border-emerald-500/20 hover:bg-white/[0.04] sm:flex-nowrap sm:gap-4 sm:p-3.5"
     >
       <div
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-display text-base font-semibold"
@@ -115,7 +119,7 @@ function SubscriptionRow({ sub, totalMonthlyCost, onChanged }: ItemProps) {
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-          <p className="truncate font-medium text-foreground">{sub.name}</p>
+          <p className="break-words font-medium text-foreground sm:truncate">{sub.name}</p>
           <span
             className="rounded-full px-2 py-0.5 text-[10px] font-medium"
             style={{ backgroundColor: `${meta.color}1A`, color: meta.color }}
@@ -131,7 +135,7 @@ function SubscriptionRow({ sub, totalMonthlyCost, onChanged }: ItemProps) {
         </p>
       </div>
 
-      <div className="w-32 shrink-0 text-right">
+      <div className="w-24 shrink-0 text-right sm:w-32">
         <p className="font-mono text-sm font-semibold tabular-nums text-foreground">{formatPLN(monthly)}</p>
         <p className="text-[10px] text-muted-foreground">
           {sub.billing_cycle === "yearly" ? `${formatPLN(sub.price)} / rok` : "/ mies."}
@@ -141,7 +145,7 @@ function SubscriptionRow({ sub, totalMonthlyCost, onChanged }: ItemProps) {
         </div>
       </div>
 
-      <div className={actionsClass}>
+      <div className={rowActionsClass}>
         <EditSubscriptionDialog subscription={sub} onUpdated={onChanged} />
         <DeleteSubscriptionButton subscription={sub} onDeleted={onChanged} />
       </div>
@@ -171,7 +175,7 @@ function SubscriptionCard({ sub, totalMonthlyCost, onChanged }: ItemProps) {
         >
           {sub.name.charAt(0).toUpperCase()}
         </div>
-        <div className={actionsClass}>
+        <div className={cardActionsClass}>
           <EditSubscriptionDialog subscription={sub} onUpdated={onChanged} />
           <DeleteSubscriptionButton subscription={sub} onDeleted={onChanged} />
         </div>

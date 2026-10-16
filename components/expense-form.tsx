@@ -219,7 +219,7 @@ export function EditExpenseDialog({ expense, onUpdated }: { expense: Expense; on
         render={
           <button
             aria-label={`Edytuj wydatek: ${expense.description || "bez opisu"}`}
-            className="text-muted-foreground transition-colors hover:text-emerald-400"
+            className="-m-2 p-2 text-muted-foreground transition-colors hover:text-emerald-400 sm:m-0 sm:p-0"
           >
             <Pencil className="h-4 w-4" />
           </button>

@@ -51,7 +51,7 @@ function DeleteExpenseButton({ expense, onDeleted }: { expense: Expense; onDelet
         render={
           <button
             aria-label={`Usuń wydatek: ${expense.description || "bez opisu"}`}
-            className="text-muted-foreground transition-colors hover:text-red-400"
+            className="-m-2 p-2 text-muted-foreground transition-colors hover:text-red-400 sm:m-0 sm:p-0"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -77,7 +77,7 @@ function DeleteExpenseButton({ expense, onDeleted }: { expense: Expense; onDelet
 }
 
 const actionsClass =
-  "flex items-center gap-3 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100";
+  "flex shrink-0 items-center gap-5 transition-opacity sm:gap-3 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100";
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -109,7 +109,7 @@ export function ExpenseList({ expenses, loading, monthName, onChanged }: Expense
     );
   }
 
-  // Lista jest juz posortowana malejaco po dacie, wiec grupy powstaja w dobrej kolejnosci.
+  // Lista jest już posortowana malejąco po dacie, więc grupy powstają w dobrej kolejności.
   const groups = new Map<string, Expense[]>();
   for (const expense of expenses) {
     groups.set(expense.spent_on, [...(groups.get(expense.spent_on) ?? []), expense]);
@@ -142,7 +142,7 @@ export function ExpenseList({ expenses, loading, monthName, onChanged }: Expense
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.98 }}
                     transition={{ duration: 0.25 }}
-                    className="group flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 transition-colors hover:border-emerald-500/20 hover:bg-white/[0.04]"
+                    className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 transition-colors hover:border-emerald-500/20 hover:bg-white/[0.04] sm:gap-4"
                   >
                     <span
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
@@ -152,13 +152,13 @@ export function ExpenseList({ expenses, loading, monthName, onChanged }: Expense
                     </span>
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
+                      <p className="break-words text-sm font-medium text-foreground sm:truncate">
                         {expense.description || meta.label}
                       </p>
                       <p className="text-xs text-muted-foreground">{meta.label}</p>
                     </div>
 
-                    <p className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                    <p className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
                       −{formatPLN(expense.amount)}
                     </p>
 

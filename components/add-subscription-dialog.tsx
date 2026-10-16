@@ -292,7 +292,7 @@ export function EditSubscriptionDialog({
       trigger={
         <button
           aria-label={`Edytuj ${subscription.name}`}
-          className="text-muted-foreground transition-colors hover:text-emerald-400"
+          className="-m-2 p-2 text-muted-foreground transition-colors hover:text-emerald-400 sm:m-0 sm:p-0"
         >
           <Pencil className="h-4 w-4" />
         </button>
