@@ -57,7 +57,7 @@ export function KpiCard({
       </div>
 
       <div className="relative mt-6">
-        <p className="font-mono text-3xl font-semibold tabular-nums text-foreground">
+        <p className="font-mono text-2xl font-semibold tabular-nums text-foreground sm:text-3xl">
           <AnimatedNumber value={value} decimals={decimals} />
           {suffix && <span className="ml-1.5 text-base font-normal text-muted-foreground">{suffix}</span>}
         </p>

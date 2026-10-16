@@ -75,11 +75,11 @@ export default function DashboardPage() {
     <div className="flex min-h-screen">
       <NavSidebar monthlyCost={monthlyCost} />
 
-      <main className="min-w-0 flex-1 p-6 lg:p-8">
+      <main className="min-w-0 flex-1 px-4 pb-10 pt-18 sm:px-6 lg:p-8">
         <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm capitalize text-muted-foreground">{today}</p>
-            <h1 className="font-display text-3xl font-semibold text-foreground">Przegląd finansowy</h1>
+            <h1 className="font-display text-2xl font-semibold text-foreground sm:text-3xl">Przegląd finansowy</h1>
           </div>
           <AddSubscriptionDialog onAdded={refresh} />
         </header>
@@ -153,7 +153,7 @@ export default function DashboardPage() {
           <div className="lg:col-span-2">
             <UpcomingRenewals subscriptions={subscriptions} />
           </div>
-          <div id="advisor" className="scroll-mt-8 lg:col-span-3">
+          <div id="advisor" className="scroll-mt-20 lg:col-span-3 lg:scroll-mt-8">
             <AiAdvisorCard subscriptions={subscriptions} />
           </div>
         </section>

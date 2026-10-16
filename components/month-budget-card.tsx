@@ -32,7 +32,7 @@ export function MonthBudgetCard({ subscriptionsMonthly }: { subscriptionsMonthly
       <div className="relative flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm capitalize text-muted-foreground">Budżet miesiąca: {monthLabel(month)}</p>
-          <p className="mt-1 font-mono text-3xl font-semibold tabular-nums text-foreground">
+          <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-foreground sm:text-3xl">
             <AnimatedNumber value={summary.total} />
             <span className="ml-1.5 text-base font-normal text-muted-foreground">
               zł{limit ? ` z ${formatPLN(limit)}` : ""}
