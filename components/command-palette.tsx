@@ -134,7 +134,7 @@ export function CommandPalette() {
           onKeyDown={(e) => {
             if (e.key === "Escape") setOpen(false);
           }}
-          className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[14vh]"
+          className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[10vh] sm:pt-[14vh]"
         >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
 
@@ -161,7 +161,7 @@ export function CommandPalette() {
                 </kbd>
               </div>
 
-              <Command.List className="max-h-[360px] overflow-y-auto p-2">
+              <Command.List className="max-h-[55dvh] overflow-y-auto p-2 sm:max-h-[360px]">
                 <Command.Empty className="py-10 text-center text-sm text-muted-foreground">
                   Nic nie znaleziono.
                 </Command.Empty>
@@ -203,7 +203,7 @@ export function CommandPalette() {
                 )}
               </Command.List>
 
-              <div className="flex items-center gap-4 border-t border-white/10 px-4 py-2.5 text-[11px] text-muted-foreground">
+              <div className="hidden items-center gap-4 border-t border-white/10 px-4 py-2.5 text-[11px] text-muted-foreground sm:flex">
                 <span><kbd className="font-mono">↑↓</kbd> nawigacja</span>
                 <span><kbd className="font-mono">↵</kbd> wybierz</span>
                 <span><kbd className="font-mono">esc</kbd> zamknij</span>

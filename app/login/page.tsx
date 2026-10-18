@@ -254,7 +254,7 @@ export default function LoginPage() {
         </div>
 
         <div className="my-auto flex w-full justify-center py-10">
-          <div className="glass-card w-full max-w-[480px] p-8 sm:p-10">
+          <div className="glass-card w-full max-w-[480px] p-6 min-[400px]:p-8 sm:p-10">
             {/* Przełącznik trybu z płynnym wskaźnikiem */}
             <div className="relative mb-8 grid grid-cols-2 rounded-xl border border-white/10 bg-white/[0.03] p-1">
               {(["login", "signup"] as const).map((m) => (
