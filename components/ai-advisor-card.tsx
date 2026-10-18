@@ -6,6 +6,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Subscription } from "@/lib/use-subscriptions";
 import { activeCategories } from "@/lib/analytics";
+import { authedFetch } from "@/lib/api-client";
 
 function Inline({ text }: { text: string }) {
   return (
@@ -69,9 +70,8 @@ export function AiAdvisorCard({ subscriptions }: { subscriptions: Subscription[]
     setAdvice(null);
 
     try {
-      const res = await fetch("/api/analyze", {
+      const res = await authedFetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subscriptions }),
       });
       const data = await res.json();

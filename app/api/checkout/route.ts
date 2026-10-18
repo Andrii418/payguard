@@ -1,31 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { checkoutSchema } from "@/lib/schemas";
+import { getAuthenticatedUser } from "@/lib/server-auth";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const result = checkoutSchema.safeParse(body);
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return NextResponse.json({ error: "Brak autoryzacji." }, { status: 401 });
+    }
 
-    if (!result.success) {
+    if (user.is_anonymous || !user.email) {
       return NextResponse.json(
-        { error: "Nieprawidłowe dane.", issues: result.error.issues },
-        { status: 400 }
+        { error: "W trybie demo płatności są wyłączone. Załóż konto." },
+        { status: 403 }
       );
     }
 
-    const { userId, email } = result.data;
+    const origin = req.nextUrl.origin;
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: process.env.STRIPE_PRO_PRICE_ID!, quantity: 1 }],
-      customer_email: email,
-      metadata: { supabase_user_id: userId },
-      success_url: `${req.headers.get("origin")}/settings?checkout=success`,
-      cancel_url: `${req.headers.get("origin")}/settings?checkout=cancelled`,
+      customer_email: user.email,
+      // Webhook użyje tego, żeby wiedzieć, któremu użytkownikowi przypisać plan Pro.
+      metadata: { supabase_user_id: user.id },
+      success_url: `${origin}/settings?checkout=success`,
+      cancel_url: `${origin}/settings?checkout=cancelled`,
     });
 
     return NextResponse.json({ url: session.url });

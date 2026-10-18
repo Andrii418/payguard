@@ -1,30 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { resend } from "@/lib/resend";
 import { welcomeEmailHtml } from "@/lib/email-templates";
-
-const schema = z.object({ email: z.string().email() });
+import { getAuthenticatedUser } from "@/lib/server-auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const result = schema.safeParse(body);
-
-    if (!result.success) {
-      return NextResponse.json({ error: "Nieprawidłowy e-mail." }, { status: 400 });
+    const user = await getAuthenticatedUser(req);
+    if (!user?.email) {
+      return NextResponse.json({ sent: false }, { status: 401 });
     }
 
     const { error } = await resend.emails.send({
       from: "PayGuard <onboarding@resend.dev>",
-      to: result.data.email,
+      to: user.email,
       subject: "Witaj w PayGuard! 🛡️",
       html: welcomeEmailHtml(),
     });
 
     if (error) {
       console.error("Błąd wysyłki e-maila powitalnego:", error);
-      // Celowo NIE blokujemy rejestracji, jeśli e-mail się nie wyśle -
-      // to funkcja poboczna, użytkownik i tak ma już konto.
+      // Celowo nie blokujemy rejestracji: e-mail to funkcja poboczna.
       return NextResponse.json({ sent: false });
     }
 

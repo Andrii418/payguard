@@ -1,27 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Crown, Loader2, Settings2 } from "lucide-react";
 import { toast } from "sonner";
+import { Crown, Loader2, Settings2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { authedFetch } from "@/lib/api-client";
 import { useIsDemoUser } from "@/lib/use-demo-user";
+import { Button } from "@/components/ui/button";
+
+type Status = "free" | "pro" | null;
+
+const primaryButton =
+  "bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]";
 
 export function SubscriptionPlanCard() {
-  const [status, setStatus] = useState<"free" | "pro" | null>(null);
+  const isDemo = useIsDemoUser();
+  const [status, setStatus] = useState<Status>(null);
   const [loading, setLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
-  const isDemo = useIsDemoUser();
 
   useEffect(() => {
     async function loadProfile() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
-
-      setUserId(userData.user.id);
-      setEmail(userData.user.email ?? null);
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -29,46 +30,33 @@ export function SubscriptionPlanCard() {
         .eq("id", userData.user.id)
         .single();
 
-      setStatus((profile?.subscription_status as "free" | "pro") ?? "free");
+      setStatus((profile?.subscription_status as Status) ?? "free");
     }
 
     loadProfile();
   }, []);
 
   async function handleUpgrade() {
-        if (isDemo) {
+    if (isDemo) {
       toast.info("W trybie demo płatności są wyłączone. Załóż konto, żeby przejść na Pro.");
       return;
     }
-    if (!userId || !email) return;
+
     setLoading(true);
-
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, email }),
-    });
-
-    const data = await res.json();
+    const res = await authedFetch("/api/checkout", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
     setLoading(false);
 
     if (data.url) {
       window.location.href = data.url;
     } else {
-      toast.error("Nie udało się rozpocząć płatności. Spróbuj ponownie.");
+      toast.error(data.error ?? "Nie udało się rozpocząć płatności. Spróbuj ponownie.");
     }
   }
 
   async function handleCancel() {
-    if (!userId) return;
     setLoading(true);
-
-    const res = await fetch("/api/cancel-subscription", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
-    });
-
+    const res = await authedFetch("/api/cancel-subscription", { method: "POST" });
     setLoading(false);
 
     if (res.ok) {
@@ -80,16 +68,9 @@ export function SubscriptionPlanCard() {
   }
 
   async function handleOpenPortal() {
-    if (!userId) return;
     setPortalLoading(true);
-
-    const res = await fetch("/api/create-portal-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
-    });
-
-    const data = await res.json();
+    const res = await authedFetch("/api/create-portal-session", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
     setPortalLoading(false);
 
     if (data.url) {
@@ -123,11 +104,7 @@ export function SubscriptionPlanCard() {
 
       {status === "pro" ? (
         <div className="flex flex-wrap gap-3">
-          <Button
-            onClick={handleOpenPortal}
-            disabled={portalLoading}
-            className="gap-2 bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]"
-          >
+          <Button onClick={handleOpenPortal} disabled={portalLoading} className={`gap-2 ${primaryButton}`}>
             {portalLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -148,11 +125,7 @@ export function SubscriptionPlanCard() {
           </Button>
         </div>
       ) : (
-        <Button
-          onClick={handleUpgrade}
-          disabled={loading}
-          className="bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]"
-        >
+        <Button onClick={handleUpgrade} disabled={loading} className={primaryButton}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Przejdź na Pro — 29,99 zł/mies."}
         </Button>
       )}

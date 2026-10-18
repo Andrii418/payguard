@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { authedFetch } from "@/lib/api-client";
 import {
   ArrowLeft,
   Bell,
@@ -181,11 +182,7 @@ export default function LoginPage() {
     }
 
     if (mode === "signup") {
-      fetch("/api/send-welcome-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: credentials.email }),
-      }).catch(() => {});
+      authedFetch("/api/send-welcome-email", { method: "POST" }).catch(() => {});
     }
 
     // Przycisk zostaje zablokowany do przejścia na dashboard - nie da się wysłać formularza dwa razy.
