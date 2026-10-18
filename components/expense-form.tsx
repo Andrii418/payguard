@@ -225,7 +225,7 @@ export function EditExpenseDialog({ expense, onUpdated }: { expense: Expense; on
           </button>
         }
       />
-      <DialogContent className="glass-card border-emerald-500/20">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto glass-card border-emerald-500/20">
         <DialogHeader>
           <DialogTitle className="font-display">Edytuj wydatek</DialogTitle>
         </DialogHeader>

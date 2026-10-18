@@ -167,7 +167,7 @@ function SubscriptionFormDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={trigger} />
 
-      <DialogContent className="glass-card border-emerald-500/20">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto glass-card border-emerald-500/20">
         <DialogHeader>
           <DialogTitle className="font-display">
             {isEdit ? "Edytuj subskrypcję" : "Nowa subskrypcja"}
