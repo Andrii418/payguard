@@ -25,17 +25,6 @@ export const subscriptionSchema = z.object({
 
 export type SubscriptionInput = z.infer<typeof subscriptionSchema>;
 
-// --- Rozpoczęcie płatności Stripe ---
-export const checkoutSchema = z.object({
-  userId: z.string().uuid("Nieprawidłowy identyfikator użytkownika."),
-  email: z.string().email("Nieprawidłowy adres e-mail."),
-});
-
-// --- Anulowanie subskrypcji Stripe ---
-export const cancelSubscriptionSchema = z.object({
-  userId: z.string().uuid("Nieprawidłowy identyfikator użytkownika."),
-});
-
 // --- Analiza wydatków przez Gemini AI ---
 export const analyzeSchema = z.object({
   subscriptions: z
@@ -56,10 +45,6 @@ export const budgetLimitSchema = z
   .positive("Limit musi być większy od zera.")
   .max(1000000, "Limit wygląda na zbyt wysoki — sprawdź wartość.");
 
-// --- Otwarcie portalu rozliczeniowego Stripe ---
-export const billingPortalSchema = z.object({
-  userId: z.string().uuid("Nieprawidłowy identyfikator użytkownika."),
-});
 // --- Logowanie / rejestracja ---
 export const authSchema = z.object({
   email: z.string().trim().email("Podaj poprawny adres e-mail."),
