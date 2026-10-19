@@ -41,7 +41,11 @@ export async function GET(req: NextRequest) {
       }),
     });
 
-    if (!sendError) sentCount += 1;
+    if (sendError) {
+      console.error(`Nie udało się wysłać przypomnienia (${sub.name}):`, sendError);
+    } else {
+      sentCount += 1;
+    }
   }
 
   return NextResponse.json({ checked: subscriptions?.length ?? 0, sent: sentCount });

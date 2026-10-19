@@ -40,7 +40,11 @@ export async function GET(req: NextRequest) {
       html: weeklyDigestEmailHtml({ monthlyCost, subscriptionCount: subscriptions.length }),
     });
 
-    if (!sendError) sentCount += 1;
+    if (sendError) {
+      console.error("Nie udało się wysłać podsumowania tygodniowego:", sendError);
+    } else {
+      sentCount += 1;
+    }
   }
 
   return NextResponse.json({ usersChecked: usersData.users.length, sent: sentCount });
