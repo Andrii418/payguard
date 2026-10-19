@@ -12,7 +12,6 @@ import { budgetLimitSchema } from "@/lib/schemas";
 import { formatPLN, totalMonthly } from "@/lib/analytics";
 import { NavSidebar } from "@/components/nav-sidebar";
 import { LoadingScreen } from "@/components/loading-screen";
-import { SubscriptionPlanCard } from "@/components/subscription-plan-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -42,11 +41,6 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (checkingAuth) return;
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("checkout") === "success") {
-      toast.success("Płatność zakończona. Status planu zaktualizuje się za chwilę (odśwież stronę).");
-    }
 
     async function loadProfile() {
       const { data: userData } = await supabase.auth.getUser();
@@ -100,12 +94,12 @@ export default function SettingsPage() {
     setSaving(false);
 
     if (error) {
-      toast.error("Nie udało się zapisać limitu budżetu.", { description: error.message });
+      toast.error("Nie udało się zapisać limitu.", { description: error.message });
       return;
     }
 
     setSavedLimit(value);
-    toast.success(value ? `Limit ustawiony na ${formatPLN(value)} / mies.` : "Limit budżetu usunięty.");
+    toast.success(value ? `Limit ustawiony na ${formatPLN(value)} / mies.` : "Limit usunięty.");
   }
 
   function handleSave(e: React.FormEvent) {
@@ -142,7 +136,7 @@ export default function SettingsPage() {
       <main className="min-w-0 flex-1 px-4 pb-10 pt-18 sm:px-6 lg:p-8">
         <header className="mb-8">
           <h1 className="font-display text-2xl font-semibold text-foreground sm:text-3xl">Ustawienia</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Zarządzaj kontem, budżetem i planem.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Zarządzaj kontem i budżetem.</p>
         </header>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -202,7 +196,7 @@ export default function SettingsPage() {
             </section>
           </div>
 
-          {/* Prawa kolumna: budżet, plan, narzędzia */}
+          {/* Prawa kolumna: limit na subskrypcje i narzędzia deweloperskie */}
           <div className="flex flex-col gap-6 xl:col-span-2">
             <section className="glass-card p-6">
               <div className="mb-1 flex items-center gap-3">
@@ -210,11 +204,10 @@ export default function SettingsPage() {
                   <PiggyBank className="h-5 w-5" />
                 </span>
                 <div>
-                  <h2 className="font-display text-lg font-semibold text-foreground">
-                    Miesięczny limit budżetu
-                  </h2>
+                  <h2 className="font-display text-lg font-semibold text-foreground">Limit na subskrypcje</h2>
                   <p className="text-xs text-muted-foreground">
-                    Ostrzeżemy Cię na Przeglądzie, gdy wydatki przekroczą tę kwotę.
+                    Ostrzeżemy Cię na Przeglądzie, gdy koszt subskrypcji przekroczy tę kwotę. Budżet całego miesiąca
+                    ustawisz w sekcji Wydatki.
                   </p>
                 </div>
               </div>
@@ -257,7 +250,7 @@ export default function SettingsPage() {
                     step={10}
                     value={sliderValue}
                     onChange={(e) => setBudgetInput(e.target.value)}
-                    aria-label="Limit budżetu"
+                    aria-label="Limit na subskrypcje"
                     className="w-full accent-emerald-400"
                   />
 
@@ -267,7 +260,7 @@ export default function SettingsPage() {
                         key={p}
                         type="button"
                         onClick={() => setBudgetInput(String(p))}
-                        className={`rounded-full border px-3 py-1 font-mono text-xs tabular-nums transition-colors ${
+                        className={`rounded-full border px-3 py-1.5 font-mono text-xs tabular-nums transition-colors ${
                           validLimit === p
                             ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300"
                             : "border-white/10 text-muted-foreground hover:border-emerald-500/30 hover:text-foreground"
@@ -310,35 +303,38 @@ export default function SettingsPage() {
               )}
             </section>
 
-            <SubscriptionPlanCard />
-
-            <details className="glass-card group p-6">
-              <summary className="flex cursor-pointer list-none items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.05] text-muted-foreground">
-                  <Wrench className="h-5 w-5" />
-                </span>
-                <div>
-                  <h2 className="font-display text-lg font-semibold text-foreground">Narzędzia deweloperskie</h2>
-                  <p className="text-xs text-muted-foreground">Ręczne wyzwalanie zadań cyklicznych (e-maile)</p>
+            {/* Widoczne tylko lokalnie (npm run dev) - na produkcji tej sekcji nie ma */}
+            {process.env.NODE_ENV === "development" && (
+              <details className="glass-card group p-6">
+                <summary className="flex cursor-pointer list-none items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.05] text-muted-foreground">
+                    <Wrench className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h2 className="font-display text-lg font-semibold text-foreground">
+                      Narzędzia deweloperskie
+                    </h2>
+                    <p className="text-xs text-muted-foreground">Ręczne wyzwalanie zadań cyklicznych (e-maile)</p>
+                  </div>
+                </summary>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Button
+                    variant="outline"
+                    className="border-emerald-500/20 text-foreground hover:bg-white/[0.04]"
+                    onClick={() => triggerDev("/api/dev/trigger-renewal-reminders")}
+                  >
+                    Testuj przypomnienia o odnowieniu
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-emerald-500/20 text-foreground hover:bg-white/[0.04]"
+                    onClick={() => triggerDev("/api/dev/trigger-weekly-digest")}
+                  >
+                    Testuj tygodniowy digest
+                  </Button>
                 </div>
-              </summary>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Button
-                  variant="outline"
-                  className="border-emerald-500/20 text-foreground hover:bg-white/[0.04]"
-                  onClick={() => triggerDev("/api/dev/trigger-renewal-reminders")}
-                >
-                  Testuj przypomnienia o odnowieniu
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-emerald-500/20 text-foreground hover:bg-white/[0.04]"
-                  onClick={() => triggerDev("/api/dev/trigger-weekly-digest")}
-                >
-                  Testuj tygodniowy digest
-                </Button>
-              </div>
-            </details>
+              </details>
+            )}
           </div>
         </div>
       </main>
