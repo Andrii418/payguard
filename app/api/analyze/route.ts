@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-    // Ograniczamy rozmiar promptu, żeby nikt nie zużył nam limitu Gemini ogromnym zapytaniem.
     const subscriptions = result.data.subscriptions.slice(0, MAX_SUBSCRIPTIONS);
 
     const summary = subscriptions
@@ -49,19 +48,25 @@ Przeanalizuj tę listę i w punktach, po polsku (maks. 150 słów):
 2. Zaproponuj konkretne, praktyczne sposoby oszczędzania.
 3. Podaj przybliżoną sumę możliwych oszczędności miesięcznie w złotych.`;
 
-    // Retry z rosnącym opóźnieniem: darmowy tier Gemini bywa chwilowo przeciążony (błąd 503).
+    // Ulepszona funkcja retry obsługująca kod 503 oraz status w obiekcie błędu
     async function generateWithRetry(attempt = 1): Promise<string> {
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: "gemini-2.5-flash", // lub "gemini-3.8-flash" w zależności od Twojej konfiguracji
           contents: prompt,
         });
         return response.text ?? "";
-      } catch (err: unknown) {
-        const overloaded = err instanceof Error && err.message.includes("UNAVAILABLE");
+      } catch (err: any) {
+        // Sprawdzamy czy to błąd 503 / UNAVAILABLE / High demand
+        const status = err?.status || err?.error?.code;
+        const message = err?.message || JSON.stringify(err);
+        const isOverloaded = status === 503 || message.includes("UNAVAILABLE") || message.includes("high demand");
 
-        if (overloaded && attempt < 3) {
-          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        if (isOverloaded && attempt <= 5) {
+          // Rosnące opóźnienie: np. 2s, 4s, 8s, 16s...
+          const delay = Math.pow(2, attempt) * 1000;
+          console.warn(`Gemini przeciążony (próba ${attempt}/5). Ponawiam za ${delay}ms...`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
           return generateWithRetry(attempt + 1);
         }
         throw err;
@@ -73,7 +78,7 @@ Przeanalizuj tę listę i w punktach, po polsku (maks. 150 słów):
   } catch (err) {
     console.error("Błąd Gemini API:", err);
     return NextResponse.json(
-      { error: "Nie udało się połączyć z Gemini AI. Spróbuj za chwilę." },
+      { error: "Model Gemini jest obecnie mocno obciążony. Spróbuj ponownie za chwilę." },
       { status: 500 }
     );
   }
