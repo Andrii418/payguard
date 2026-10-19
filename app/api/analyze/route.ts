@@ -52,7 +52,7 @@ Przeanalizuj tę listę i w punktach, po polsku (maks. 150 słów):
     async function generateWithRetry(attempt = 1): Promise<string> {
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash", // lub "gemini-3.8-flash" w zależności od Twojej konfiguracji
+          model: "gemini-3.8-flash", // lub "gemini-3.8-flash" w zależności od Twojej konfiguracji
           contents: prompt,
         });
         return response.text ?? "";
