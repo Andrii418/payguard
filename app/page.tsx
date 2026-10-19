@@ -52,33 +52,20 @@ const chartBars = [
   { c: "#34D399", h: 75 },
 ];
 
-const freeFeatures = ["Do 5 subskrypcji", "Wykresy i karty KPI", "Limit budżetu z alertem"];
-const proFeatures = [
-  "Nielimitowane subskrypcje",
-  "Doradca Finansowy AI",
-  "Eksport danych do CSV",
-  "Portal rozliczeń Stripe",
-];
-
 const stack = [
   "Next.js 16",
   "TypeScript",
   "Tailwind CSS 4",
   "Supabase",
-  "Stripe",
   "Google Gemini",
   "Framer Motion",
   "Recharts",
 ];
 
 const faqs = [
-  {
+    {
     q: "Czy PayGuard jest darmowy?",
-    a: "Tak, plan Free jest dostępny od razu i bez karty. Plan Pro to płatny dodatek z dodatkowymi funkcjami.",
-  },
-  {
-    q: "Czy płatności są prawdziwe?",
-    a: "Nie. PayGuard to projekt portfolio, a płatności działają wyłącznie w trybie testowym Stripe. Nie pobieramy prawdziwych pieniędzy, a do testów służy karta 4242 4242 4242 4242.",
+    a: "Tak, w całości. To projekt portfolio, więc nie ma tu płatności ani płatnych planów. Wszystkie funkcje są dostępne po założeniu konta albo w trybie demo.",
   },
   {
     q: "Czy moje dane są bezpieczne?",
@@ -143,7 +130,7 @@ export default function LandingPage() {
 
             <Reveal delay={0.32}>
               <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                {["Bez karty kredytowej", "Plan darmowy na start", "Demo bez rejestracji"].map((t) => (
+                {["Całkowicie za darmo", "Bez karty kredytowej", "Demo bez rejestracji"].map((t) => (
                   <li key={t} className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-emerald-400" />
                     {t}
@@ -319,72 +306,6 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      {/* ===== Cennik ===== */}
-      <section id="pricing" className="mx-auto max-w-5xl scroll-mt-24 px-6 py-24">
-        <Reveal className="mx-auto mb-12 max-w-2xl text-center">
-          <h2 className="font-display text-3xl font-semibold text-foreground sm:text-4xl">
-            Prosty, uczciwy cennik
-          </h2>
-          <p className="mt-4 text-muted-foreground">Zacznij za darmo. Przejdź na Pro, kiedy będziesz gotowy.</p>
-        </Reveal>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <Reveal delay={0.05}>
-            <div className="glass-card h-full p-8">
-              <h3 className="font-display text-xl font-semibold text-foreground">Free</h3>
-              <p className="mt-3 font-mono text-4xl font-semibold text-foreground">0 zł</p>
-              <p className="mb-7 mt-1 text-sm text-muted-foreground">na zawsze</p>
-              <ul className="mb-8 flex flex-col gap-3">
-                {freeFeatures.map((f) => (
-                  <li key={f} className="flex items-center gap-2.5 text-sm text-foreground">
-                    <Check className="h-4 w-4 text-emerald-400" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/login?mode=signup"
-                className="flex h-11 w-full items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-sm font-medium text-foreground transition-colors hover:border-emerald-500/30 hover:bg-white/[0.06]"
-              >
-                Zacznij za darmo
-              </Link>
-            </div>
-          </Reveal>
-
-          <Reveal delay={0.15}>
-            <div className="h-full rounded-2xl bg-linear-to-b from-emerald-400/70 via-emerald-500/20 to-transparent p-px">
-              <div className="relative h-full overflow-hidden rounded-[15px] bg-[#0b0d13] p-8">
-                <div className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-emerald-500/25 blur-3xl" />
-                <span className="absolute right-6 top-6 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300">
-                  Najpopularniejszy
-                </span>
-                <h3 className="relative font-display text-xl font-semibold text-foreground">Pro</h3>
-                <p className="relative mt-3 font-mono text-4xl font-semibold text-foreground">
-                  29,99 zł<span className="text-base font-normal text-muted-foreground"> / mies.</span>
-                </p>
-                <p className="relative mb-7 mt-1 text-sm text-muted-foreground">rozliczane co miesiąc</p>
-                <ul className="relative mb-8 flex flex-col gap-3">
-                  {proFeatures.map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-foreground">
-                      <Check className="h-4 w-4 text-emerald-400" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/login?mode=signup" className={`${ctaPrimaryLg} relative w-full`}>
-                  Przejdź na Pro
-                </Link>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-
-        <p className="mx-auto mt-6 max-w-2xl text-center text-xs text-muted-foreground">
-          Projekt portfolio: płatności działają w trybie testowym Stripe, więc nie pobieramy prawdziwych pieniędzy.
-          Różnice między planami są ilustracyjne.
-        </p>
-      </section>
-
       {/* ===== Pod maską ===== */}
       <section className="mx-auto max-w-4xl px-6 py-16 text-center">
         <Reveal>
@@ -458,7 +379,7 @@ export default function LandingPage() {
             <span className="font-display text-sm font-semibold text-foreground">PayGuard</span>
           </div>
           <p className="text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} PayGuard. Projekt portfolio, płatności w trybie testowym.
+            © {new Date().getFullYear()} PayGuard. Projekt portfolio.
           </p>
         </div>
       </footer>

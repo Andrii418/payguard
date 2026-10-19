@@ -230,7 +230,7 @@ export default function LoginPage() {
         </div>
 
         <p className="relative text-xs text-muted-foreground">
-          Projekt portfolio, płatności działają w trybie testowym Stripe.
+          Projekt portfolio.
         </p>
       </aside>
 

@@ -11,7 +11,6 @@ const links = [
   { href: "#features", label: "Funkcje" },
   { href: "#how", label: "Jak to działa" },
   { href: "#calculator", label: "Kalkulator" },
-  { href: "#pricing", label: "Cennik" },
   { href: "#faq", label: "FAQ" },
 ];
 
