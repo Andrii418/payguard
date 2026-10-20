@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   LayoutDashboard,
-  Wallet,
+  Repeat,
   Receipt,
   Sparkles,
   Settings,
@@ -19,27 +19,40 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { resetDemoData } from "@/lib/demo";
+import { formatPLN } from "@/lib/analytics";
+import { monthKey } from "@/lib/dates";
 import { useIsDemoUser } from "@/lib/use-demo-user";
+import { useExpenses } from "@/lib/use-expenses";
+import { useRecurringSync } from "@/lib/use-recurring-sync";
 import { CommandPalette, OPEN_PALETTE_EVENT } from "@/components/command-palette";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Przegląd" },
-  { href: "/subscriptions", icon: Wallet, label: "Subskrypcje" },
   { href: "/expenses", icon: Receipt, label: "Wydatki" },
+  { href: "/subscriptions", icon: Repeat, label: "Cykliczne" },
   { href: "/dashboard#advisor", icon: Sparkles, label: "Doradca AI" },
   { href: "/settings", icon: Settings, label: "Ustawienia" },
 ];
 
 interface NavSidebarProps {
+  // Zostawione dla zgodności ze stronami, które je jeszcze przekazują. Karta pokazuje teraz prawdziwe wydatki miesiąca.
   monthlyCost?: number;
 }
 
-export function NavSidebar({ monthlyCost }: NavSidebarProps) {
+export function NavSidebar(_props: NavSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isDemo = useIsDemoUser();
   const [resetting, setResetting] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+
+  useRecurringSync();
+
+  const month = monthKey();
+  const { expenses } = useExpenses(month, 0);
+  const monthSpent = expenses
+    .filter((e) => e.spent_on.startsWith(month))
+    .reduce((sum, e) => sum + e.amount, 0);
 
   // Panel jest "otwarty dla konkretnej ścieżki": po przejściu na inną stronę zamyka się sam.
   const [openFor, setOpenFor] = useState<string | null>(null);
@@ -53,14 +66,13 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
     if (!open) return;
 
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden"; // blokada przewijania tła pod panelem
+    document.body.style.overflow = "hidden";
     closeRef.current?.focus();
 
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setOpenFor(null);
     }
 
-    // Po obróceniu telefonu / powiększeniu okna do układu desktopowego panel jest niepotrzebny.
     const desktop = window.matchMedia("(min-width: 1024px)");
     function onBreakpoint() {
       if (desktop.matches) setOpenFor(null);
@@ -95,7 +107,6 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
     window.location.reload();
   }
 
-  // Ta sama zawartość w menu desktopowym i w wysuwanym panelu - bez kopiowania kodu.
   function renderBody(variant: "desktop" | "drawer") {
     const mobile = variant === "drawer";
 
@@ -194,9 +205,9 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
           )}
 
           <div className="glass-card p-4">
-            <p className="text-xs text-muted-foreground">Miesięczne wydatki</p>
+            <p className="text-xs text-muted-foreground">Wydatki w tym miesiącu</p>
             <p className="font-mono text-lg font-semibold tabular-nums text-foreground">
-              {monthlyCost !== undefined ? `${monthlyCost.toFixed(2)} zł` : "—"}
+              {formatPLN(monthSpent)}
             </p>
           </div>
         </div>
@@ -206,12 +217,10 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
 
   return (
     <>
-      {/* ===== Komputer (od 1024 px): menu boczne jak dotąd ===== */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col justify-between border-r border-emerald-500/10 bg-white/[0.02] p-6 lg:flex">
         {renderBody("desktop")}
       </aside>
 
-      {/* ===== Telefon / tablet: pasek górny z hamburgerem ===== */}
       <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 border-b border-white/[0.08] bg-obsidian/80 px-4 backdrop-blur-xl lg:hidden">
         <button
           onClick={openDrawer}
@@ -242,7 +251,6 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
         </button>
       </header>
 
-      {/* ===== Wysuwany panel menu ===== */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -267,7 +275,6 @@ export function NavSidebar({ monthlyCost }: NavSidebarProps) {
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={{ left: 0.4, right: 0 }}
               onDragEnd={(_, info) => {
-                // Przesunięcie palcem w lewo zamyka panel
                 if (info.offset.x < -70 || info.velocity.x < -400) closeDrawer();
               }}
               className="absolute left-0 top-0 flex h-dvh w-[84%] max-w-[300px] flex-col justify-between overflow-y-auto border-r border-emerald-500/15 bg-[#0b0d13]/95 p-6 shadow-2xl shadow-black/60 backdrop-blur-xl"

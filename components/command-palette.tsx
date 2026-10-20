@@ -168,7 +168,7 @@ export function CommandPalette() {
 
                 <Command.Group heading="Nawigacja" className={groupClass}>
                   <PaletteItem icon={LayoutDashboard} label="Przegląd" keywords={["dashboard", "pulpit"]} onSelect={() => go("/dashboard")} />
-                  <PaletteItem icon={Wallet} label="Subskrypcje" keywords={["lista"]} onSelect={() => go("/subscriptions")} />
+                  <PaletteItem icon={Wallet} label="Płatności cykliczne" keywords={["lista"]} onSelect={() => go("/subscriptions")} />
                   <PaletteItem icon={Receipt} label="Wydatki i budżet" keywords={["budżet", "koszty", "limity"]} onSelect={() => go("/expenses")} />
                   <PaletteItem icon={Sparkles} label="Doradca AI" keywords={["gemini", "oszczędności"]} onSelect={() => go("/dashboard#advisor")} />
                   <PaletteItem icon={Settings} label="Ustawienia" keywords={["konto", "plan", "budżet"]} onSelect={() => go("/settings")} />
@@ -176,7 +176,7 @@ export function CommandPalette() {
                 </Command.Group>
 
                 <Command.Group heading="Akcje" className={groupClass}>
-                  <PaletteItem icon={Plus} label="Dodaj subskrypcję" keywords={["nowa", "utwórz"]} onSelect={() => go("/subscriptions?new=1")} />
+                  <PaletteItem icon={Plus} label="Dodaj płatność cykliczną" keywords={["nowa", "utwórz"]} onSelect={() => go("/subscriptions?new=1")} />
                   <PaletteItem icon={Plus} label="Dodaj wydatek" keywords={["nowy", "zakupy", "koszt"]} onSelect={() => go("/expenses?new=1")} />
                   <PaletteItem icon={Download} label="Eksportuj do CSV" keywords={["pobierz", "excel"]} onSelect={handleExport} />
                   <PaletteItem icon={PiggyBank} label="Ustaw limit budżetu" keywords={["budżet", "limit"]} onSelect={() => go("/settings")} />
@@ -184,7 +184,7 @@ export function CommandPalette() {
                 </Command.Group>
 
                 {subscriptions.length > 0 && (
-                  <Command.Group heading="Twoje subskrypcje" className={groupClass}>
+                  <Command.Group heading="Płatności cykliczne" className={groupClass}>
                     {subscriptions.map((sub) => {
                       const meta = getCategoryMeta(sub.category);
                       return (
