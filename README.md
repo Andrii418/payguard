@@ -1,36 +1,135 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PayGuard
 
-## Getting Started
+Inteligentny menedżer subskrypcji z doradcą AI, który pomaga kontrolować wydatki, śledzić aktywne usługi i wykrywać miejsca, w których można realnie zaoszczędzić.
 
-First, run the development server:
+Aplikacja jest zbudowana w Next.js i pozwala użytkownikowi:
+- dodawać i zarządzać subskrypcjami,
+- monitorować miesięczny koszt i budżet,
+- analizować wydatki według kategorii,
+- otrzymywać rekomendacje AI dotyczące zbędnych lub nakładających się usług,
+- otrzymywać przypomnienia o odnowieniach.
+
+## Demo i produkcja
+
+- Strona główna: https://payguard-pearl.vercel.app
+- Repozytorium: https://github.com/Andrii418/payguard
+
+## Główne funkcje
+
+- Dashboard z podsumowaniem wydatków miesięcznych i rocznych
+- Lista aktywnych subskrypcji z kategoriami i datami odnowienia
+- Analiza budżetu z alertami przy przekroczeniu limitu
+- Doradca AI oparty o Google Gemini, który proponuje oszczędności
+- Wykresy i KPI dla kategorii, trendów i przyszłych opłat
+- Przypomnienia e-mail przed odnowieniem subskrypcji
+- Tryb demo z przykładowymi danymi
+- Bezpieczna autoryzacja użytkownika i RLS w Supabase
+
+## Stack technologiczny
+
+- Next.js 16 (App Router)
+- TypeScript
+- React 19
+- Tailwind CSS 4
+- Supabase
+- Google Gemini API
+- Resend (e-mail)
+- Recharts
+- Framer Motion
+
+## Struktura projektu
+
+```bash
+app/                  # widoki aplikacji i routing app router
+components/          # komponenty UI i sekcje dashboardu
+lib/                 # logika biznesowa, klient Supabase, analityka, auth
+public/              # ikony i zasoby statyczne
+app/api/             # endpoints API (analiza AI, cron, emaile)
+next.config.ts       # konfiguracja Next.js
+package.json         # zależności i skrypty
+```
+
+## Wymagania
+
+- Node.js 20+
+- npm / pnpm / yarn / bun
+- Konto Supabase
+- Klucz API Google Gemini
+- Klucz API Resend (opcjonalnie, jeśli korzystasz z e-maili)
+
+## Uruchomienie lokalne
+
+1. Sklonuj repozytorium:
+
+```bash
+git clone https://github.com/Andrii418/payguard.git
+cd payguard
+```
+
+2. Zainstaluj zależności:
+
+```bash
+npm install
+```
+
+3. Skonfiguruj zmienne środowiskowe w pliku `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SECRET_KEY=your_supabase_service_role_key
+GEMINI_API_KEY=your_google_gemini_key
+RESEND_API_KEY=your_resend_key
+CRON_SECRET=your_cron_secret
+```
+
+4. Uruchom środowisko developerskie:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Otwórz aplikację w przeglądarce:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Przydatne skrypty
 
-## Learn More
+```bash
+npm run dev      # start deweloperski
+npm run build    # build produkcyjny
+npm run start    # uruchomienie produkcyjne
+npm run lint     # linting ESLint
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Konfiguracja środowiska
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Aplikacja używa:
+- `NEXT_PUBLIC_SUPABASE_URL` i `NEXT_PUBLIC_SUPABASE_ANON_KEY` w kliencie frontendowym,
+- `SUPABASE_SECRET_KEY` w endpointach serwerowych,
+- `GEMINI_API_KEY` do analizy subskrypcji przez AI,
+- `RESEND_API_KEY` do wysyłki przypomnień e-mail,
+- `CRON_SECRET` do ochrony endpointów cron.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Uwaga: klucz anon Supabase nie jest tajny i może być widoczny w przeglądarce; zabezpieczenie danych odbywa się za pomocą Row Level Security (RLS).
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Projekt jest przygotowany do wdrożenia na Vercel. Wystarczy podłączyć repozytorium do Vercel i dodać wszystkie zmienne środowiskowe z sekcji powyżej.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Bezpieczeństwo i prywatność
+
+- dane użytkownika są izolowane przez RLS w Supabase,
+- w żądaniach AI wysyłane są tylko podstawowe informacje o subskrypcjach,
+- sesja użytkownika jest weryfikowana po stronie serwera,
+- endpointy cron są chronione przez `CRON_SECRET`.
+
+## Licencja
+
+Brak pełnej deklaracji licencji w repozytorium. Jeśli projekt ma być publicznie udostępniany, warto dodać odpowiedni plik LICENSE i doprecyzować warunki użycia.
+
+## Autor
+
+PayGuard był tworzony jako projekt portfolio / aplikacja do zarządzania subskrypcjami z elementami AI.
