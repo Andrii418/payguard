@@ -12,7 +12,6 @@ Aplikacja jest zbudowana w Next.js i pozwala użytkownikowi:
 ## Demo i produkcja
 
 - Strona główna: https://payguard-pearl.vercel.app
-- Repozytorium: https://github.com/Andrii418/payguard
 
 ## Główne funkcje
 
@@ -113,12 +112,6 @@ Aplikacja używa:
 - `RESEND_API_KEY` do wysyłki przypomnień e-mail,
 - `CRON_SECRET` do ochrony endpointów cron.
 
-Uwaga: klucz anon Supabase nie jest tajny i może być widoczny w przeglądarce; zabezpieczenie danych odbywa się za pomocą Row Level Security (RLS).
-
-## Deployment
-
-Projekt jest przygotowany do wdrożenia na Vercel. Wystarczy podłączyć repozytorium do Vercel i dodać wszystkie zmienne środowiskowe z sekcji powyżej.
-
 ## Bezpieczeństwo i prywatność
 
 - dane użytkownika są izolowane przez RLS w Supabase,
@@ -126,10 +119,3 @@ Projekt jest przygotowany do wdrożenia na Vercel. Wystarczy podłączyć repozy
 - sesja użytkownika jest weryfikowana po stronie serwera,
 - endpointy cron są chronione przez `CRON_SECRET`.
 
-## Licencja
-
-Brak pełnej deklaracji licencji w repozytorium. Jeśli projekt ma być publicznie udostępniany, warto dodać odpowiedni plik LICENSE i doprecyzować warunki użycia.
-
-## Autor
-
-PayGuard był tworzony jako projekt portfolio / aplikacja do zarządzania subskrypcjami z elementami AI.
