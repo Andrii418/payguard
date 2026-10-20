@@ -1,18 +1,16 @@
 import { supabase } from "@/lib/supabase";
 import { toISODate } from "@/lib/dates";
 
-const DEMO_BUDGET_LIMIT = 350; // limit na subskrypcje (profiles.budget_limit)
+const DEMO_BUDGET_LIMIT = 350;
 
 interface DemoSubscription {
   name: string;
   price: number;
   billing_cycle: "monthly" | "yearly";
   category: "streaming" | "software" | "cloud" | "other";
-  inDays: number; // za ile dni odnowienie, liczone od dzis
+  inDays: number; 
 }
 
-// Celowo kilka platform streamingowych - dzieki temu Doradca AI ma co wykrywac,
-// a suma przekracza limit, wiec demo od razu pokazuje alert.
 const DEMO_SUBSCRIPTIONS: DemoSubscription[] = [
   { name: "Netflix", price: 43.99, billing_cycle: "monthly", category: "streaming", inDays: 2 },
   { name: "Spotify", price: 23.99, billing_cycle: "monthly", category: "streaming", inDays: 5 },
@@ -31,7 +29,6 @@ interface DemoExpense {
   amount: number;
 }
 
-// Wydatki biezacego miesiaca: daysAgo liczone wstecz od dzis (nie wychodzimy poza biezacy miesiac).
 const DEMO_EXPENSES: Array<DemoExpense & { daysAgo: number }> = [
   { description: "Zakupy spożywcze", category: "food", amount: 213.8, daysAgo: 0 },
   { description: "Kawa i obiad", category: "food", amount: 46.5, daysAgo: 1 },
@@ -53,7 +50,6 @@ const DEMO_EXPENSES: Array<DemoExpense & { daysAgo: number }> = [
   { description: "Zakupy spożywcze", category: "food", amount: 201.3, daysAgo: 21 },
 ];
 
-// Poprzedni miesiac: stale dni, zeby przelacznik miesiecy mial co pokazac.
 const DEMO_PREVIOUS_MONTH: Array<DemoExpense & { day: number }> = [
   { description: "Zakupy spożywcze", category: "food", amount: 198.2, day: 4 },
   { description: "Paliwo", category: "transport", amount: 380, day: 6 },
@@ -75,7 +71,6 @@ const DEMO_BUDGETS = [
   { category: "shopping", amount: 400 },
 ];
 
-// Daty liczymy wzgledem "dzis", zeby demo zawsze wygladalo na zywe.
 function daysFromNow(days: number) {
   const d = new Date();
   d.setDate(d.getDate() + days);
@@ -106,7 +101,6 @@ async function seedDemoData(userId: string): Promise<string | null> {
     spent_on: toISODate(new Date(now.getFullYear(), now.getMonth() - 1, day)),
   }));
 
-  // Wydatki i budzety sa dodatkiem - ich ewentualny blad nie blokuje startu demo.
   const { error: expensesError } = await supabase.from("expenses").insert([...currentRows, ...previousRows]);
   if (expensesError) console.warn("Nie udało się dodać wydatków demo:", expensesError.message);
 
@@ -115,15 +109,12 @@ async function seedDemoData(userId: string): Promise<string | null> {
     .insert(DEMO_BUDGETS.map((b) => ({ user_id: userId, ...b })));
   if (budgetsError) console.warn("Nie udało się dodać budżetów demo:", budgetsError.message);
 
-  // Profil istnieje, bo tworzy go trigger na tabeli auth.users (Etap 5)
   await supabase.from("profiles").update({ budget_limit: DEMO_BUDGET_LIMIT }).eq("id", userId);
 
   return null;
 }
 
 export async function startDemo(): Promise<{ error: string | null }> {
-  // Jesli ktos ma juz sesje (demo albo prawdziwe konto), NIE tworzymy nowej -
-  // inaczej nadpisalibysmy sesje prawdziwego uzytkownika anonimowa.
   const { data: sessionData } = await supabase.auth.getSession();
   if (sessionData.session) return { error: null };
 
@@ -138,8 +129,6 @@ export async function startDemo(): Promise<{ error: string | null }> {
 export async function resetDemoData(): Promise<{ error: string | null }> {
   const { data } = await supabase.auth.getUser();
 
-  // BEZPIECZNIK: reset kasuje dane, wiec wolno go wykonac wylacznie na koncie anonimowym.
-  // Prawdziwy uzytkownik nigdy nie straci danych.
   if (!data.user?.is_anonymous) {
     return { error: "Reset jest dostępny tylko w trybie demo." };
   }

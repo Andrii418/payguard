@@ -41,7 +41,6 @@ export const EXPENSE_CATEGORY_META: Record<ExpenseCategoryKey, ExpenseCategoryMe
   other: { label: "Inne", color: "#94A3B8", icon: Tag },
 };
 
-// "Subskrypcje" to kategoria wirtualna: liczona z listy subskrypcji, a nie z tabeli wydatków.
 export const SUBSCRIPTIONS_CATEGORY: ExpenseCategoryMeta = {
   label: "Subskrypcje",
   color: "#818CF8",

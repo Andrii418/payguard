@@ -34,7 +34,6 @@ export function useBudgets(refreshKey: number) {
     load();
   }, [load, refreshKey]);
 
-  // Zwraca komunikat bledu albo null, gdy zapis sie udal.
   const saveBudget = useCallback(
     async (category: string, amount: number | null): Promise<string | null> => {
       const { data: userData } = await supabase.auth.getUser();

@@ -1,4 +1,3 @@
-// Data lokalna w formacie YYYY-MM-DD (toISOString uzywa UTC i potrafi "cofnac" dzien).
 export function toISODate(d: Date): string {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -12,7 +11,6 @@ export function addDays(days: number, from: Date = new Date()): Date {
   return d;
 }
 
-// --- Miesiace w formacie "YYYY-MM" ---
 
 export function monthKey(d: Date = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;

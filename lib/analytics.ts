@@ -14,7 +14,6 @@ export function totalMonthly(subs: Subscription[]): number {
   return subs.reduce((sum, s) => sum + monthlyEquivalent(s), 0);
 }
 
-// Liczymy względem lokalnej północy, żeby uniknąć błędu "o jeden dzień" przy strefach czasowych.
 export function daysUntil(dateString: string): number {
   const target = new Date(`${dateString}T00:00:00`);
   const today = new Date();
@@ -58,7 +57,6 @@ export function activeCategories(subs: Subscription[]): string[] {
   return [...known, ...unknown];
 }
 
-// Heurystyka: w każdej kategorii z więcej niż jedną usługą "nadmiarowe" są wszystkie poza najtańszą.
 export function possibleSavings(subs: Subscription[]): number {
   const groups: Record<string, number[]> = {};
   for (const s of subs) (groups[s.category] ??= []).push(monthlyEquivalent(s));
@@ -85,7 +83,6 @@ export interface UpcomingPoint {
   cumulative: number;
 }
 
-// Narastająca suma realnych płatności w najbliższych 30 dniach (wykres schodkowy).
 export function upcomingSeries(subs: Subscription[], horizon = 30): UpcomingPoint[] {
   const base = new Date();
   const points: UpcomingPoint[] = Array.from({ length: horizon + 1 }, (_, day) => {
@@ -113,7 +110,6 @@ export function upcomingSeries(subs: Subscription[], horizon = 30): UpcomingPoin
   return points;
 }
 
-// Skumulowana prognoza wydatków na kolejne miesiące, z podziałem na kategorie.
 export function burnRateSeries(subs: Subscription[], months = 6): Array<Record<string, string | number>> {
   const monthly: Record<string, number> = {};
   for (const s of subs) monthly[s.category] = (monthly[s.category] ?? 0) + monthlyEquivalent(s);

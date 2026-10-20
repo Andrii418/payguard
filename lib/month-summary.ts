@@ -34,7 +34,6 @@ export interface MonthSummary {
   projectedTotal: number | null;
 }
 
-// Subskrypcje liczymy wg AKTUALNEJ listy (system nie przechowuje historii zmian cen).
 export function summarizeMonth(
   expenses: Expense[],
   subscriptionsMonthly: number,
@@ -44,7 +43,7 @@ export function summarizeMonth(
   const daysTotal = daysInMonth(month);
   const current = monthKey();
   const isCurrent = month === current;
-  const isPast = month < current; // porownanie tekstowe dziala dla formatu YYYY-MM
+  const isPast = month < current; 
   const daysElapsed = isCurrent ? new Date().getDate() : isPast ? daysTotal : 0;
 
   const spent: Record<string, number> = {};
@@ -108,8 +107,6 @@ export function summarizeMonth(
   };
 }
 
-// Porownanie "uczciwe": w trwajacym miesiacu zestawiamy z poprzednim do TEGO SAMEGO dnia,
-// a nie z jego pelna suma (inaczej 10. dnia miesiaca zawsze wygladalibysmy swietnie).
 export function comparablePrevious(summary: MonthSummary, previous: MonthSummary): number {
   if (!summary.isCurrent) return previous.expensesTotal;
   return previous.daily.slice(0, summary.daysElapsed).reduce((sum, p) => sum + p.amount, 0);

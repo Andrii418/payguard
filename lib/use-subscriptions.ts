@@ -18,7 +18,6 @@ export function useSubscriptions(refreshKey: number) {
   const [loading, setLoading] = useState(true);
   const [live, setLive] = useState(false);
 
-  // silent = odswiezenie "w tle" (bez migania szkieletow ladowania)
   const fetchSubscriptions = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     const { data } = await supabase
@@ -34,7 +33,6 @@ export function useSubscriptions(refreshKey: number) {
     fetchSubscriptions();
   }, [fetchSubscriptions, refreshKey]);
 
-  // --- Realtime: kazda zmiana w bazie odswieza liste bez przeladowania strony ---
   useEffect(() => {
     let cancelled = false;
     let channel: RealtimeChannel | null = null;
@@ -55,7 +53,6 @@ export function useSubscriptions(refreshKey: number) {
             filter: `user_id=eq.${data.user.id}`,
           },
           () => {
-            // Debounce: seria zmian (np. reset demo = 9 wstawien) to jedno odswiezenie, nie dziewiec.
             clearTimeout(timer);
             timer = setTimeout(() => fetchSubscriptions(true), 250);
           }

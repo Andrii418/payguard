@@ -11,13 +11,10 @@ export function exportSubscriptionsToCsv(subscriptions: Subscription[]) {
     new Date(s.next_renewal).toLocaleDateString("pl-PL"),
   ]);
 
-  // Średnik jako separator (nie przecinek) - w polskim Excelu przecinek
-  // to separator dziesiętny, więc "," jako separator kolumn psułby otwieranie pliku.
   const csvContent = [headers, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(";"))
     .join("\r\n");
 
-  // BOM (\uFEFF) na początku pliku - bez tego Excel źle wyświetla polskie znaki (ą, ż, ś itd.)
   const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
 

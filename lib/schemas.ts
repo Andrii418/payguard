@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// --- Dodawanie subskrypcji (formularz + insert do Supabase) ---
 export const subscriptionSchema = z.object({
   name: z
     .string()
@@ -25,7 +24,6 @@ export const subscriptionSchema = z.object({
 
 export type SubscriptionInput = z.infer<typeof subscriptionSchema>;
 
-// --- Analiza wydatków przez Gemini AI ---
 export const analyzeSchema = z.object({
   subscriptions: z
     .array(
@@ -39,13 +37,11 @@ export const analyzeSchema = z.object({
     .min(1, "Brak subskrypcji do przeanalizowania."),
 });
 
-// --- Limit budżetu (Ustawienia) ---
 export const budgetLimitSchema = z
   .coerce.number({ error: "Limit musi być liczbą." })
   .positive("Limit musi być większy od zera.")
   .max(1000000, "Limit wygląda na zbyt wysoki — sprawdź wartość.");
 
-// --- Logowanie / rejestracja ---
 export const authSchema = z.object({
   email: z.string().trim().email("Podaj poprawny adres e-mail."),
   password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków."),

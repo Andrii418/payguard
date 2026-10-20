@@ -10,7 +10,7 @@ export interface Expense {
   amount: number;
   category: string;
   description: string;
-  spent_on: string; // YYYY-MM-DD
+  spent_on: string; 
 }
 
 export function useExpenses(month: string, refreshKey: number) {
@@ -36,7 +36,6 @@ export function useExpenses(month: string, refreshKey: number) {
     [month]
   );
 
-  // Ref z najnowsza funkcja pobierania - dzieki temu zmiana miesiaca nie zrywa polaczenia realtime.
   const fetchRef = useRef(fetchExpenses);
   useEffect(() => {
     fetchRef.current = fetchExpenses;

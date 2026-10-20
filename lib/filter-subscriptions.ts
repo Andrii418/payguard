@@ -4,7 +4,7 @@ export type SortOption = "renewal" | "price-desc" | "price-asc" | "name";
 
 export interface SubscriptionFilters {
   query: string;
-  category: string; // "all" albo konkretna kategoria
+  category: string; 
   sort: SortOption;
 }
 
@@ -14,8 +14,6 @@ export const defaultFilters: SubscriptionFilters = {
   sort: "renewal",
 };
 
-// Do sortowania po cenie porównujemy koszt MIESIĘCZNY - inaczej roczna
-// subskrypcja za 120 zł wyglądałaby na droższą niż miesięczna za 50 zł.
 function monthlyEquivalent(s: Subscription) {
   return s.billing_cycle === "monthly" ? s.price : s.price / 12;
 }
