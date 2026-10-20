@@ -4,6 +4,88 @@ import { analyzeSchema } from "@/lib/schemas";
 import { getAuthenticatedUser } from "@/lib/server-auth";
 
 const MAX_SUBSCRIPTIONS = 100;
+const MODEL = "gemini-3.8-flash";
+const MAX_ATTEMPTS = 4; // pierwsza próba + 3 ponowienia
+const BASE_DELAY_MS = 1500; // opóźnienia: 1,5 s, 3 s, 6 s (łącznie ok. 10 s)
+
+// Jawny limit czasu funkcji (60 s mieści się w limitach darmowego planu Vercela)
+export const maxDuration = 60;
+
+interface GeminiErrorInfo {
+  status: number | null;
+  message: string;
+}
+
+// Błędy z SDK Gemini mają różny kształt, więc odczytujemy status i treść ostrożnie.
+function readError(err: unknown): GeminiErrorInfo {
+  const e = err as { status?: number; error?: { code?: number }; message?: string } | null;
+  const status =
+    typeof e?.status === "number" ? e.status : typeof e?.error?.code === "number" ? e.error.code : null;
+  const message = e?.message ?? String(err);
+  return { status, message };
+}
+
+function isOverloaded({ status, message }: GeminiErrorInfo) {
+  return status === 503 || message.includes("UNAVAILABLE") || message.includes("high demand");
+}
+
+async function generateWithRetry(ai: GoogleGenAI, prompt: string): Promise<string> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await ai.models.generateContent({ model: MODEL, contents: prompt });
+      return response.text ?? "";
+    } catch (err) {
+      lastError = err;
+
+      // Ponawiamy tylko przy przeciążeniu. Zły klucz czy model nic nie zmieni.
+      if (!isOverloaded(readError(err)) || attempt === MAX_ATTEMPTS) break;
+
+      const delay = BASE_DELAY_MS * 2 ** (attempt - 1);
+      console.warn(`Gemini przeciążony (próba ${attempt}/${MAX_ATTEMPTS}). Ponawiam za ${delay} ms...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
+}
+
+// Każdy rodzaj błędu dostaje własny, zrozumiały komunikat (pełna treść trafia do logów).
+function errorResponse(err: unknown) {
+  const info = readError(err);
+  const { status, message } = info;
+
+  if (isOverloaded(info)) {
+    return NextResponse.json(
+      { error: "Gemini jest chwilowo przeciążone. Spróbuj ponownie za minutę." },
+      { status: 503 }
+    );
+  }
+
+  if (status === 429 || message.includes("RESOURCE_EXHAUSTED")) {
+    return NextResponse.json(
+      { error: "Przekroczono limit darmowego Gemini API. Spróbuj później." },
+      { status: 429 }
+    );
+  }
+
+  if (message.includes("API_KEY_INVALID") || message.includes("PERMISSION_DENIED") || status === 401 || status === 403) {
+    return NextResponse.json(
+      { error: "Klucz Gemini API jest nieprawidłowy lub nie ma uprawnień. Sprawdź GEMINI_API_KEY." },
+      { status: 500 }
+    );
+  }
+
+  if (status === 404 || message.includes("NOT_FOUND")) {
+    return NextResponse.json(
+      { error: "Model Gemini jest niedostępny. Google mógł zmienić jego nazwę." },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ error: "Nie udało się połączyć z Gemini AI. Spróbuj za chwilę." }, { status: 500 });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -48,38 +130,10 @@ Przeanalizuj tę listę i w punktach, po polsku (maks. 150 słów):
 2. Zaproponuj konkretne, praktyczne sposoby oszczędzania.
 3. Podaj przybliżoną sumę możliwych oszczędności miesięcznie w złotych.`;
 
-    // Ulepszona funkcja retry obsługująca kod 503 oraz status w obiekcie błędu
-    async function generateWithRetry(attempt = 1): Promise<string> {
-      try {
-        const response = await ai.models.generateContent({
-          model: "gemini-3.8-flash", // lub "gemini-3.8-flash" w zależności od Twojej konfiguracji
-          contents: prompt,
-        });
-        return response.text ?? "";
-      } catch (err: any) {
-        // Sprawdzamy czy to błąd 503 / UNAVAILABLE / High demand
-        const status = err?.status || err?.error?.code;
-        const message = err?.message || JSON.stringify(err);
-        const isOverloaded = status === 503 || message.includes("UNAVAILABLE") || message.includes("high demand");
-
-        if (isOverloaded && attempt <= 5) {
-          // Rosnące opóźnienie: np. 2s, 4s, 8s, 16s...
-          const delay = Math.pow(2, attempt) * 1000;
-          console.warn(`Gemini przeciążony (próba ${attempt}/5). Ponawiam za ${delay}ms...`);
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          return generateWithRetry(attempt + 1);
-        }
-        throw err;
-      }
-    }
-
-    const advice = await generateWithRetry();
+    const advice = await generateWithRetry(ai, prompt);
     return NextResponse.json({ advice });
   } catch (err) {
     console.error("Błąd Gemini API:", err);
-    return NextResponse.json(
-      { error: "Model Gemini jest obecnie mocno obciążony. Spróbuj ponownie za chwilę." },
-      { status: 500 }
-    );
+    return errorResponse(err);
   }
 }
