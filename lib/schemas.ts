@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CATEGORY_KEYS } from "@/lib/category-keys";
 
 export const subscriptionSchema = z.object({
   name: z
@@ -13,9 +14,8 @@ export const subscriptionSchema = z.object({
   billing_cycle: z.enum(["monthly", "yearly"], {
     error: "Wybierz cykl rozliczeniowy.",
   }),
-  category: z.enum(["streaming", "software", "cloud", "other"], {
-    error: "Wybierz kategorię.",
-  }),
+  category: z.enum(CATEGORY_KEYS, { error: "Wybierz kategorię." }),
+  kind: z.enum(["subscription", "fixed"], { error: "Wybierz typ płatności." }),
   next_renewal: z
     .string()
     .min(1, "Data odnowienia jest wymagana.")

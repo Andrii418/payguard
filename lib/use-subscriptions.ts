@@ -10,6 +10,7 @@ export interface Subscription {
   price: number;
   billing_cycle: "monthly" | "yearly";
   category: string;
+  kind: "subscription" | "fixed";
   next_renewal: string;
 }
 

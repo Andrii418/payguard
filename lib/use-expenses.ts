@@ -11,6 +11,8 @@ export interface Expense {
   category: string;
   description: string;
   spent_on: string; 
+  recurring_id?: string | null;
+  recurring_kind?: "subscription" | "fixed" | null;
 }
 
 export function useExpenses(month: string, refreshKey: number) {
