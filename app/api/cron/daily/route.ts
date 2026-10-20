@@ -3,6 +3,7 @@ import { isAuthorizedCronRequest } from "@/lib/cron-auth";
 import { GET as renewalReminders } from "@/app/api/cron/renewal-reminders/route";
 import { GET as weeklyDigest } from "@/app/api/cron/weekly-digest/route";
 import { GET as cleanupDemoUsers } from "@/app/api/cron/cleanup-demo-users/route";
+import { GET as postRecurring } from "@/app/api/cron/post-recurring/route";
 
 export const maxDuration = 60;
 
@@ -22,7 +23,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Brak autoryzacji." }, { status: 401 });
   }
 
-  const results = [await runJob("renewal-reminders", renewalReminders, req)];
+  const results = [await runJob("post-recurring", postRecurring, req)];
+  results.push(await runJob("renewal-reminders", renewalReminders, req));
 
   // Tygodniowe podsumowanie wysyłamy tylko w poniedziałki (harmonogramy Vercela są w UTC).
   if (new Date().getUTCDay() === 1) {
