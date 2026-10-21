@@ -64,15 +64,14 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         <Wallet className="h-8 w-8" />
       </div>
       <h2 className="relative mt-6 font-display text-2xl font-semibold text-foreground">
-        Zacznij od pierwszej subskrypcji
+        Dodaj pierwszą płatność cykliczną
       </h2>
       <p className="relative mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-        Dodaj Netflixa, Spotify albo cokolwiek, co odnawia się co miesiąc. Wykresy, alerty i porady AI pojawią się
-        same.
+        Dodaj Netflixa, czynsz albo cokolwiek, co płacisz regularnie. Zapisze się w wydatkach samo, w dniu płatności.
       </p>
       <button onClick={onAdd} className={`${ctaPrimary} relative mt-8`}>
         <Plus className="h-4 w-4" />
-        Dodaj subskrypcję
+        Dodaj płatność
       </button>
     </div>
   );
@@ -139,8 +138,8 @@ function SubscriptionsContent() {
         <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <LiveChip live={live} />
-            <h1 className="mt-3 font-display text-2xl font-semibold text-foreground sm:text-3xl">Subskrypcje</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Wszystko, za co płacisz, w jednym miejscu.</p>
+            <h1 className="mt-3 font-display text-2xl font-semibold text-foreground sm:text-3xl">Płatności cykliczne</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Subskrypcje i opłaty stałe, które księgują się same w dniu płatności.</p>
           </div>
           <div className="flex gap-3">
             <Button

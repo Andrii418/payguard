@@ -131,6 +131,8 @@ function SubscriptionRow({ sub, totalMonthlyCost, onChanged }: ItemProps) {
           {new Date(`${sub.next_renewal}T00:00:00`).toLocaleDateString("pl-PL")}
           <span>·</span>
           {sub.billing_cycle === "monthly" ? "co miesiąc" : "co rok"}
+          <span>·</span>
+          {sub.kind === "fixed" ? "opłata stała" : "subskrypcja"}
           <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] ${renewal.cls}`}>{renewal.text}</span>
         </p>
       </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { subscriptionSchema } from "@/lib/schemas";
 import type { Subscription } from "@/lib/use-subscriptions";
+import { EXPENSE_CATEGORY_KEYS, EXPENSE_CATEGORY_META } from "@/lib/expense-categories";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,15 +25,20 @@ import {
 } from "@/components/ui/select";
 import { Plus, Pencil } from "lucide-react";
 
-const categories = [
-  { value: "streaming", label: "Streaming" },
-  { value: "software", label: "Oprogramowanie" },
-  { value: "cloud", label: "Chmura / Hosting" },
-  { value: "other", label: "Inne" },
-];
+const categories = EXPENSE_CATEGORY_KEYS.map((key) => ({
+  value: key,
+  label: EXPENSE_CATEGORY_META[key].label,
+}));
+
+const KINDS = [
+  { value: "subscription", label: "Subskrypcja" },
+  { value: "fixed", label: "Opłata stała" },
+] as const;
+
+type Kind = (typeof KINDS)[number]["value"];
 
 type FieldErrors = Partial<
-  Record<"name" | "price" | "billing_cycle" | "category" | "next_renewal", string>
+  Record<"name" | "price" | "billing_cycle" | "category" | "kind" | "next_renewal", string>
 >;
 
 const primaryButtonClass =
@@ -42,11 +48,10 @@ interface SubscriptionFormDialogProps {
   subscription?: Subscription; // brak = tryb dodawania, jest = tryb edycji
   trigger: React.ReactElement;
   onSaved: () => void;
-  open?: boolean; // opcjonalne sterowanie z zewnatrz
+  open?: boolean; // opcjonalne sterowanie z zewnątrz
   onOpenChange?: (open: boolean) => void;
 }
 
-// Jeden formularz obsługujący OBA tryby - reguły walidacji i wygląd w jednym miejscu.
 function SubscriptionFormDialog({
   subscription,
   trigger,
@@ -62,9 +67,11 @@ function SubscriptionFormDialog({
     setInternalOpen(value);
     onOpenChange?.(value);
   };
+
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("other");
+  const [category, setCategory] = useState<string>("fun");
+  const [kind, setKind] = useState<Kind>("subscription");
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [nextRenewal, setNextRenewal] = useState("");
   const [loading, setLoading] = useState(false);
@@ -87,6 +94,7 @@ function SubscriptionFormDialog({
       setName(subscription.name);
       setPrice(String(subscription.price));
       setCategory(subscription.category);
+      setKind(subscription.kind ?? "subscription");
       setBillingCycle(subscription.billing_cycle);
       setNextRenewal(subscription.next_renewal);
     }
@@ -98,9 +106,10 @@ function SubscriptionFormDialog({
 
     const result = subscriptionSchema.safeParse({
       name,
-      price,
+      price: price.trim().replace(",", "."),
       billing_cycle: billingCycle,
       category,
+      kind,
       next_renewal: nextRenewal,
     });
 
@@ -118,7 +127,6 @@ function SubscriptionFormDialog({
     setLoading(true);
 
     if (isEdit && subscription) {
-      // --- TRYB EDYCJI ---
       const { error } = await supabase
         .from("subscriptions")
         .update(result.data)
@@ -133,11 +141,10 @@ function SubscriptionFormDialog({
 
       toast.success(`Zaktualizowano "${result.data.name}".`);
     } else {
-      // --- TRYB DODAWANIA ---
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
         setLoading(false);
-        toast.error("Musisz być zalogowany, żeby dodać subskrypcję.");
+        toast.error("Musisz być zalogowany, żeby dodać płatność.");
         return;
       }
 
@@ -149,11 +156,11 @@ function SubscriptionFormDialog({
       setLoading(false);
 
       if (error) {
-        toast.error("Nie udało się dodać subskrypcji.", { description: error.message });
+        toast.error("Nie udało się dodać płatności.", { description: error.message });
         return;
       }
 
-      toast.success(`Dodano "${result.data.name}" do Twoich subskrypcji.`);
+      toast.success(`Dodano "${result.data.name}" do płatności cyklicznych.`);
       setName("");
       setPrice("");
       setNextRenewal("");
@@ -170,16 +177,38 @@ function SubscriptionFormDialog({
       <DialogContent className="max-h-[90dvh] overflow-y-auto glass-card border-emerald-500/20">
         <DialogHeader>
           <DialogTitle className="font-display">
-            {isEdit ? "Edytuj subskrypcję" : "Nowa subskrypcja"}
+            {isEdit ? "Edytuj płatność cykliczną" : "Nowa płatność cykliczna"}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+          <div
+            role="group"
+            aria-label="Typ płatności"
+            className="grid grid-cols-2 rounded-xl border border-white/10 bg-white/[0.03] p-1"
+          >
+            {KINDS.map((k) => (
+              <button
+                key={k.value}
+                type="button"
+                aria-pressed={kind === k.value}
+                onClick={() => setKind(k.value)}
+                className={`h-9 rounded-lg text-sm font-medium transition-colors ${
+                  kind === k.value
+                    ? "bg-emerald-500/15 text-emerald-300"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {k.label}
+              </button>
+            ))}
+          </div>
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Nazwa</Label>
             <Input
               id="name"
-              placeholder="np. Netflix"
+              placeholder={kind === "fixed" ? "np. Czynsz" : "np. Netflix"}
               value={name}
               onChange={(e) => setName(e.target.value)}
               aria-invalid={!!fieldErrors.name}
@@ -189,11 +218,10 @@ function SubscriptionFormDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="price">Cena (zł)</Label>
+              <Label htmlFor="price">Kwota (zł)</Label>
               <Input
                 id="price"
-                type="number"
-                step="0.01"
+                inputMode="decimal"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 aria-invalid={!!fieldErrors.price}
@@ -202,7 +230,7 @@ function SubscriptionFormDialog({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Cykl rozliczeniowy</Label>
+              <Label>Cykl</Label>
               <Select value={billingCycle} onValueChange={handleBillingCycleChange}>
                 <SelectTrigger>
                   <SelectValue />
@@ -232,7 +260,7 @@ function SubscriptionFormDialog({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="renewal">Data następnego odnowienia</Label>
+            <Label htmlFor="renewal">Data najbliższej płatności</Label>
             <Input
               id="renewal"
               type="date"
@@ -240,13 +268,17 @@ function SubscriptionFormDialog({
               onChange={(e) => setNextRenewal(e.target.value)}
               aria-invalid={!!fieldErrors.next_renewal}
             />
-            {fieldErrors.next_renewal && (
+            {fieldErrors.next_renewal ? (
               <p className="text-xs text-red-400">{fieldErrors.next_renewal}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                W tym dniu płatność sama zapisze się w wydatkach, a data przeskoczy na kolejny okres.
+              </p>
             )}
           </div>
 
           <Button type="submit" disabled={loading} className={`mt-2 ${primaryButtonClass}`}>
-            {loading ? "Zapisywanie..." : isEdit ? "Zapisz zmiany" : "Zapisz subskrypcję"}
+            {loading ? "Zapisywanie..." : isEdit ? "Zapisz zmiany" : "Dodaj płatność"}
           </Button>
         </form>
       </DialogContent>
@@ -271,7 +303,7 @@ export function AddSubscriptionDialog({
       trigger={
         <Button className={`gap-2 ${primaryButtonClass}`}>
           <Plus className="h-4 w-4" />
-          Dodaj subskrypcję
+          Dodaj płatność
         </Button>
       }
     />
