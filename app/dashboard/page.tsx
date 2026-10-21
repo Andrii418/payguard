@@ -26,7 +26,9 @@ import { AiAdvisorCard } from "@/components/ai-advisor-card";
 export default function DashboardPage() {
   const checkingAuth = useAuthGuard();
   const [refreshKey, setRefreshKey] = useState(0);
-  const { subscriptions } = useSubscriptions(refreshKey);
+  const { subscriptions: allRecurring } = useSubscriptions(refreshKey);
+  // Do czasu przebudowy Przeglądu liczymy tu tylko subskrypcje, bez opłat stałych typu czynsz.
+  const subscriptions = allRecurring.filter((s) => s.kind === "subscription");
   const [budgetLimit, setBudgetLimit] = useState<number | null>(null);
   const hasWarnedRef = useRef(false);
 
@@ -137,7 +139,7 @@ export default function DashboardPage() {
         </section>
 
         <section className="mt-4">
-          <MonthBudgetCard subscriptionsMonthly={monthlyCost} />
+          <MonthBudgetCard subscriptions={allRecurring} />
         </section>
 
         <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-5">

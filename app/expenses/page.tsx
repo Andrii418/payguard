@@ -7,9 +7,8 @@ import { useAuthGuard } from "@/lib/use-auth-guard";
 import { useSubscriptions } from "@/lib/use-subscriptions";
 import { useExpenses } from "@/lib/use-expenses";
 import { useBudgets } from "@/lib/use-budgets";
-import { totalMonthly } from "@/lib/analytics";
 import { daysInMonth, monthKey, monthLabel, shiftMonth, toISODate } from "@/lib/dates";
-import { comparablePrevious, summarizeMonth } from "@/lib/month-summary";
+import { comparablePrevious, scheduledRemaining, summarizeMonth } from "@/lib/month-summary";
 import { NavSidebar } from "@/components/nav-sidebar";
 import { LoadingScreen } from "@/components/loading-screen";
 import { LiveChip } from "@/components/live-chip";
@@ -31,7 +30,7 @@ function ExpensesContent() {
   const { expenses, loading, live } = useExpenses(month, refreshKey);
   const { limits, saveBudget } = useBudgets(refreshKey);
 
-  // ?new=1 (z palety komend) ustawia fokus w polu kwoty szybkiego dodawania
+  // ?new=1 (z palety komend i z Przeglądu) ustawia fokus w polu kwoty szybkiego dodawania
   useEffect(() => {
     if (checkingAuth || !searchParams.get("new")) return;
 
@@ -41,29 +40,29 @@ function ExpensesContent() {
     return () => clearTimeout(timer);
   }, [checkingAuth, searchParams, router]);
 
-  const subsMonthly = totalMonthly(subscriptions);
+  const current = monthKey();
+  const isCurrent = month === current;
+  const scheduled = scheduledRemaining(subscriptions);
 
-  const summary = useMemo(() => summarizeMonth(expenses, subsMonthly, month), [expenses, subsMonthly, month]);
-  const previous = useMemo(
-    () => summarizeMonth(expenses, subsMonthly, shiftMonth(month, -1)),
-    [expenses, subsMonthly, month]
+  const summary = useMemo(
+    () => summarizeMonth(expenses, month, isCurrent ? scheduled : 0),
+    [expenses, month, isCurrent, scheduled]
   );
+  const previous = useMemo(() => summarizeMonth(expenses, shiftMonth(month, -1)), [expenses, month]);
   const monthExpenses = useMemo(() => expenses.filter((e) => e.spent_on.startsWith(month)), [expenses, month]);
 
   if (checkingAuth) return <LoadingScreen />;
 
   const refresh = () => setRefreshKey((k) => k + 1);
-  const current = monthKey();
-  const isCurrent = month === current;
 
-  // Domyslna data nowego wydatku: dzis (biezacy miesiac) albo ostatni dzien ogladanego miesiaca
+  // Domyślna data nowego wydatku: dziś (bieżący miesiąc) albo ostatni dzień oglądanego miesiąca
   const defaultDate = isCurrent
     ? toISODate(new Date())
     : `${month}-${String(daysInMonth(month)).padStart(2, "0")}`;
 
   return (
     <div className="flex min-h-screen">
-      <NavSidebar monthlyCost={subsMonthly} />
+      <NavSidebar />
 
       <main className="min-w-0 flex-1 px-4 pb-10 pt-18 sm:px-6 lg:p-8">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
@@ -71,7 +70,7 @@ function ExpensesContent() {
             <LiveChip live={live} />
             <h1 className="mt-3 font-display text-2xl font-semibold text-foreground sm:text-3xl">Wydatki i budżet</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Zapisuj codzienne wydatki i pilnuj limitów razem z subskrypcjami.
+              Zapisuj codzienne wydatki. Płatności cykliczne księgują się same.
             </p>
           </div>
 
@@ -111,7 +110,7 @@ function ExpensesContent() {
           <p className="mb-3 text-xs text-muted-foreground">
             Szybkie dodawanie: wpisz kwotę i wciśnij <kbd className="font-mono">Enter</kbd>.
           </p>
-          {/* key={month}: zmiana miesiaca resetuje formularz i domyslna date */}
+          {/* key={month}: zmiana miesiąca resetuje formularz i domyślną datę */}
           <ExpenseForm
             key={month}
             layout="inline"

@@ -4,9 +4,10 @@ import Link from "next/link";
 import { ArrowRight, Plus } from "lucide-react";
 import { formatPLN } from "@/lib/analytics";
 import { monthKey, monthLabel } from "@/lib/dates";
-import { summarizeMonth } from "@/lib/month-summary";
+import { scheduledRemaining, summarizeMonth } from "@/lib/month-summary";
 import { useBudgets } from "@/lib/use-budgets";
 import { useExpenses } from "@/lib/use-expenses";
+import type { Subscription } from "@/lib/use-subscriptions";
 import { AnimatedNumber } from "@/components/animated-number";
 
 function barClass(usage: number) {
@@ -15,12 +16,12 @@ function barClass(usage: number) {
   return "bg-linear-to-r from-emerald-400 to-sky-400";
 }
 
-export function MonthBudgetCard({ subscriptionsMonthly }: { subscriptionsMonthly: number }) {
+export function MonthBudgetCard({ subscriptions }: { subscriptions: Subscription[] }) {
   const month = monthKey();
   const { expenses } = useExpenses(month, 0);
   const { limits } = useBudgets(0);
 
-  const summary = summarizeMonth(expenses, subscriptionsMonthly, month);
+  const summary = summarizeMonth(expenses, month, scheduledRemaining(subscriptions));
   const limit = limits.total ?? null;
   const usage = limit ? (summary.total / limit) * 100 : null;
   const remaining = limit ? limit - summary.total : null;
@@ -58,7 +59,6 @@ export function MonthBudgetCard({ subscriptionsMonthly }: { subscriptionsMonthly
         </div>
       </div>
 
-      {/* Podzial miesiaca na kategorie */}
       {summary.byCategory.length > 0 && (
         <div className="relative mt-5">
           <div className="flex h-2.5 overflow-hidden rounded-full bg-white/[0.06]">

@@ -30,7 +30,9 @@ export default function SettingsPage() {
   const checkingAuth = useAuthGuard();
   const router = useRouter();
   const isDemo = useIsDemoUser();
-  const { subscriptions } = useSubscriptions(0);
+  const { subscriptions: allRecurring } = useSubscriptions(0);
+  // Limit w Ustawieniach dotyczy subskrypcji, nie opłat stałych
+  const subscriptions = allRecurring.filter((s) => s.kind === "subscription");
 
   const [email, setEmail] = useState<string | null>(null);
   const [memberSince, setMemberSince] = useState<string | null>(null);

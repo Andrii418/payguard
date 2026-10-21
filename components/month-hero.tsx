@@ -32,15 +32,19 @@ interface MonthHeroProps {
 }
 
 export function MonthHero({ summary, previousComparable, limit, onSaveLimit }: MonthHeroProps) {
-  const { total, expensesTotal, subscriptionsTotal, isCurrent, daysTotal, daysElapsed } = summary;
+  const { total, fixedTotal, variableTotal, scheduled, isCurrent, daysTotal, daysElapsed } = summary;
 
   const usage = limit ? (total / limit) * 100 : null;
   const remaining = limit ? limit - total : null;
-  const daysLeft = isCurrent ? daysTotal - daysElapsed + 1 : 0; // wliczamy dzisiejszy dzien
-  const perDayLeft = remaining !== null && remaining > 0 && daysLeft > 0 ? remaining / daysLeft : null;
+  const daysLeft = isCurrent ? daysTotal - daysElapsed + 1 : 0; // wliczamy dzisiejszy dzień
 
-  const delta = previousComparable > 0 ? ((expensesTotal - previousComparable) / previousComparable) * 100 : null;
+  // Ile można swobodnie wydawać dziennie: to, co zostało po odjęciu zaplanowanych płatności cyklicznych
+  const free = limit !== null ? limit - total - scheduled : null;
+  const perDay = free !== null && free > 0 && daysLeft > 0 ? free / daysLeft : null;
+
+  const delta = previousComparable > 0 ? ((total - previousComparable) / previousComparable) * 100 : null;
   const deltaGood = delta !== null && delta <= 0;
+  const fixedShare = total > 0 ? (fixedTotal / total) * 100 : 0;
 
   return (
     <motion.div
@@ -55,18 +59,42 @@ export function MonthHero({ summary, previousComparable, limit, onSaveLimit }: M
       <p className="relative text-sm capitalize text-muted-foreground">Razem w miesiącu: {monthLabel(summary.month)}</p>
 
       <div className="relative mt-2 flex items-baseline gap-2">
-        <span className="font-mono text-5xl font-semibold tabular-nums text-foreground sm:text-6xl">
+        <span className="font-mono text-4xl font-semibold tabular-nums text-foreground sm:text-6xl">
           <AnimatedNumber value={total} />
         </span>
         <span className="font-mono text-xl text-muted-foreground">zł</span>
       </div>
 
-      <p className="relative mt-2 text-sm text-muted-foreground">
-        w tym <span className="font-mono text-foreground">{formatPLN(expensesTotal)}</span> wydatków i{" "}
-        <span className="font-mono text-foreground">{formatPLN(subscriptionsTotal)}</span> subskrypcji
-      </p>
+      {/* Stałe i zmienne */}
+      {total > 0 && (
+        <div className="relative mt-4">
+          <div className="flex h-2 overflow-hidden rounded-full bg-white/[0.06]">
+            <div className="h-full bg-indigo-400" style={{ width: `${fixedShare}%` }} />
+            <div className="h-full bg-emerald-400" style={{ width: `${100 - fixedShare}%` }} />
+          </div>
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-indigo-400" />
+              Stałe (cykliczne){" "}
+              <span className="font-mono tabular-nums text-foreground">{formatPLN(fixedTotal)}</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              Zmienne{" "}
+              <span className="font-mono tabular-nums text-foreground">{formatPLN(variableTotal)}</span>
+            </span>
+          </div>
+        </div>
+      )}
 
-      {/* Budzet calego miesiaca */}
+      {scheduled > 0 && (
+        <p className="relative mt-3 text-sm text-muted-foreground">
+          Do końca miesiąca padną jeszcze płatności cykliczne na{" "}
+          <span className="font-mono text-foreground">{formatPLN(scheduled)}</span>.
+        </p>
+      )}
+
+      {/* Budżet całego miesiąca */}
       <div className="relative mt-6">
         {limit && usage !== null && remaining !== null ? (
           <>
@@ -96,11 +124,10 @@ export function MonthHero({ summary, previousComparable, limit, onSaveLimit }: M
               ) : (
                 <>
                   Zostało <span className="font-mono text-foreground">{formatPLN(remaining)}</span>
-                  {perDayLeft !== null && (
+                  {perDay !== null && (
                     <>
-                      {" "}
-                      (ok. <span className="font-mono text-foreground">{formatPLN(perDayLeft)}</span> dziennie do
-                      końca miesiąca)
+                      . Swobodnie możesz wydawać ok.{" "}
+                      <span className="font-mono text-foreground">{formatPLN(perDay)}</span> dziennie
                     </>
                   )}
                   .
@@ -117,22 +144,19 @@ export function MonthHero({ summary, previousComparable, limit, onSaveLimit }: M
       </div>
 
       <div className="relative mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Tile label="Średnio dziennie" hint="same wydatki, bez subskrypcji">
+        <Tile label="Średnio dziennie" hint="tylko koszty zmienne">
           {formatPLN(summary.dailyAverage)}
         </Tile>
 
         {summary.projectedTotal !== null ? (
-          <Tile label="Prognoza na koniec miesiąca" hint="wg dotychczasowego tempa">
+          <Tile label="Prognoza na koniec miesiąca" hint="tempo + zaplanowane płatności">
             {formatPLN(summary.projectedTotal)}
           </Tile>
         ) : (
           <Tile label="Liczba wydatków">{summary.count}</Tile>
         )}
 
-        <Tile
-          label="Wydatki vs poprzedni miesiąc"
-          hint={isCurrent ? "do tego samego dnia miesiąca" : "cały poprzedni miesiąc"}
-        >
+        <Tile label="Razem vs poprzedni miesiąc" hint={isCurrent ? "do tego samego dnia miesiąca" : "cały poprzedni miesiąc"}>
           {delta === null ? (
             "—"
           ) : (

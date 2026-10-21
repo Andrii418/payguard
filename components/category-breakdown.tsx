@@ -20,7 +20,7 @@ interface CategoryBreakdownProps {
 export function CategoryBreakdown({ summary, limits, onSaveLimit }: CategoryBreakdownProps) {
   const spentMap = new Map(summary.byCategory.map((c) => [c.category, c]));
 
-  const rows = [...EXPENSE_CATEGORY_KEYS, "subscriptions"]
+  const rows = [...EXPENSE_CATEGORY_KEYS]
     .map((key) => {
       const meta = getExpenseCategoryMeta(key);
       const entry = spentMap.get(key);
@@ -86,7 +86,7 @@ export function CategoryBreakdown({ summary, limits, onSaveLimit }: CategoryBrea
       </div>
 
       <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
-        Subskrypcje liczone są wg aktualnej listy. Ich limit jest taki sam jak w Ustawieniach.
+        Płatności cykliczne księgują się same w dniu płatności, więc są już wliczone w kategorie.
       </p>
     </div>
   );

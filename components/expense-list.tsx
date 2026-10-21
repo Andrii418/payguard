@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Receipt, Trash2 } from "lucide-react";
+import { Receipt, Repeat, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -155,7 +155,15 @@ export function ExpenseList({ expenses, loading, monthName, onChanged }: Expense
                       <p className="break-words text-sm font-medium text-foreground sm:truncate">
                         {expense.description || meta.label}
                       </p>
-                      <p className="text-xs text-muted-foreground">{meta.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {meta.label}
+                        {(expense.recurring_id || expense.recurring_kind) && (
+                          <span className="ml-2 inline-flex items-center gap-1 text-emerald-300">
+                            <Repeat className="h-3 w-3" />
+                            {expense.recurring_kind === "subscription" ? "subskrypcja" : "stała"}
+                          </span>
+                        )}
+                      </p>
                     </div>
 
                     <p className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
