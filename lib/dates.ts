@@ -39,3 +39,8 @@ export function monthLabel(key: string): string {
   const { year, month } = parseMonthKey(key);
   return new Date(year, month - 1, 1).toLocaleDateString("pl-PL", { month: "long", year: "numeric" });
 }
+
+export function shortMonthLabel(key: string): string {
+  const { year, month } = parseMonthKey(key);
+  return new Date(year, month - 1, 1).toLocaleDateString("pl-PL", { month: "short" }).replace(".", "");
+}
