@@ -123,8 +123,23 @@ async function seedDemoData(userId: string): Promise<string | null> {
     spent_on: toISODate(new Date(now.getFullYear(), now.getMonth() - 1, day)),
   }));
 
+  // Starsze miesiące (2-5 wstecz), żeby wykres trendu na Przeglądzie miał historię.
+  // Płatności stałe zostają takie same, wydatki zmienne różnią się o kilka procent.
+  const OLDER_MONTH_FACTORS = [0.93, 1.06, 0.89, 0.97];
+
+  const olderRows = OLDER_MONTH_FACTORS.flatMap((factor, i) =>
+    DEMO_PREVIOUS_MONTH.map(({ day, ...e }) => ({
+      user_id: userId,
+      ...e,
+      amount: e.recurring_kind ? e.amount : Math.round(e.amount * factor * 100) / 100,
+      spent_on: toISODate(new Date(now.getFullYear(), now.getMonth() - (i + 2), day)),
+    }))
+  );
+
   // Wydatki i budżety są dodatkiem - ich ewentualny błąd nie blokuje startu demo.
-  const { error: expensesError } = await supabase.from("expenses").insert([...currentRows, ...previousRows]);
+  const { error: expensesError } = await supabase
+    .from("expenses")
+    .insert([...currentRows, ...previousRows, ...olderRows]);
   if (expensesError) console.warn("Nie udało się dodać wydatków demo:", expensesError.message);
 
   const { error: budgetsError } = await supabase
