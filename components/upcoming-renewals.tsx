@@ -20,11 +20,11 @@ export function UpcomingRenewals({ subscriptions }: { subscriptions: Subscriptio
 
   return (
     <div className="glass-card h-full p-6">
-      <h2 className="font-display text-lg font-semibold text-foreground">Nadchodzące odnowienia</h2>
-      <p className="mb-5 mt-0.5 text-xs text-muted-foreground">Najbliższe obciążenia Twojej karty</p>
+      <h2 className="font-display text-lg font-semibold text-foreground">Najbliższe płatności</h2>
+      <p className="mb-5 mt-0.5 text-xs text-muted-foreground">Subskrypcje i opłaty stałe</p>
 
       {upcoming.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">Brak zaplanowanych odnowień.</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">Brak zaplanowanych płatności cyklicznych.</p>
       ) : (
         <div className="flex flex-col gap-2.5">
           {upcoming.map(({ sub, days }, i) => {
