@@ -2,85 +2,77 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import type { Subscription } from "@/lib/use-subscriptions";
-import { activeCategories } from "@/lib/analytics";
+import { AlertTriangle, Check, Loader2, RefreshCw, Sparkles, Target } from "lucide-react";
 import { authedFetch } from "@/lib/api-client";
+import { formatPLN } from "@/lib/analytics";
+import type { BudgetAdvice, BudgetSnapshot } from "@/lib/budget-snapshot-schema";
+import { Button } from "@/components/ui/button";
 
-function Inline({ text }: { text: string }) {
-  return (
-    <>
-      {text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-        part.startsWith("**") && part.endsWith("**") ? (
-          <strong key={i} className="font-semibold text-foreground">
-            {part.slice(2, -2)}
-          </strong>
-        ) : (
-          <span key={i}>{part}</span>
-        )
-      )}
-    </>
-  );
+const SEVERITY = {
+  high: { label: "Pilne", cls: "bg-red-500/10 text-red-300" },
+  medium: { label: "Uwaga", cls: "bg-amber-500/10 text-amber-300" },
+  low: { label: "Do rozważenia", cls: "bg-sky-500/10 text-sky-300" },
+} as const;
+
+const CACHE_KEY = "payguard:ai-advice-v2";
+
+interface Cached {
+  advice: BudgetAdvice;
+  at: number;
+  monthLabel: string;
 }
 
-function Advice({ text }: { text: string }) {
-  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-
-  return (
-    <div className="flex flex-col gap-3 text-sm leading-relaxed text-muted-foreground">
-      {lines.map((line, i) => {
-        const bullet = line.match(/^[*-]\s+(.*)$/);
-        const numbered = line.match(/^(\d+)\.\s+(.*)$/);
-
-        if (bullet) {
-          return (
-            <p key={i} className="flex gap-2.5">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-              <span><Inline text={bullet[1]} /></span>
-            </p>
-          );
-        }
-        if (numbered) {
-          return (
-            <p key={i} className="flex gap-2.5">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-emerald-500/10 font-mono text-[11px] text-emerald-300">
-                {numbered[1]}
-              </span>
-              <span><Inline text={numbered[2]} /></span>
-            </p>
-          );
-        }
-        return (
-          <p key={i}><Inline text={line} /></p>
-        );
-      })}
-    </div>
-  );
+// Ostatnia analiza zostaje w pamięci karty przeglądarki, więc przejście na inną stronę jej nie kasuje.
+function readCache(monthLabel: string): Cached | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Cached;
+    return parsed.monthLabel === monthLabel ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
-export function AiAdvisorCard({ subscriptions }: { subscriptions: Subscription[] }) {
-  const [advice, setAdvice] = useState<string | null>(null);
+function writeCache(value: Cached) {
+  try {
+    window.sessionStorage.setItem(CACHE_KEY, JSON.stringify(value));
+  } catch {
+    // brak dostępu do sessionStorage (np. tryb prywatny) - analiza po prostu nie zostanie zapamiętana
+  }
+}
+
+export function AiAdvisorCard({ snapshot }: { snapshot: BudgetSnapshot }) {
+  const [initial] = useState(() => readCache(snapshot.monthLabel));
+  const [advice, setAdvice] = useState<BudgetAdvice | null>(initial?.advice ?? null);
+  const [at, setAt] = useState<number | null>(initial?.at ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleAnalyze() {
+  const hasData = snapshot.expenseCount > 0 || snapshot.recurring.length > 0;
+  const savingsTotal = advice ? advice.savings.reduce((sum, s) => sum + s.monthlySaving, 0) : 0;
+
+  async function analyze() {
     setLoading(true);
     setError(null);
-    setAdvice(null);
 
     try {
       const res = await authedFetch("/api/analyze", {
         method: "POST",
-        body: JSON.stringify({ subscriptions }),
+        body: JSON.stringify({ snapshot }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         setError(data.error ?? "Coś poszło nie tak.");
-      } else {
-        setAdvice(data.advice);
+        return;
       }
+
+      const now = Date.now();
+      setAdvice(data.advice);
+      setAt(now);
+      writeCache({ advice: data.advice, at: now, monthLabel: snapshot.monthLabel });
     } catch {
       setError("Nie udało się połączyć z serwerem.");
       toast.error("Nie udało się połączyć z Doradcą AI.");
@@ -90,23 +82,23 @@ export function AiAdvisorCard({ subscriptions }: { subscriptions: Subscription[]
   }
 
   return (
-    <div className="glass-card relative h-full overflow-hidden p-6">
+    <div className="glass-card relative overflow-hidden p-6">
       <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-violet-500/15 blur-3xl" />
 
-      <div className="relative mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="relative flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-violet-500/30 to-emerald-500/30 text-emerald-300">
             <Sparkles className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="font-display text-lg font-semibold text-foreground">Doradca Finansowy AI</h2>
-            <p className="text-xs text-muted-foreground">Napędzany przez Google Gemini</p>
+            <h2 className="font-display text-lg font-semibold text-foreground">Doradca budżetu AI</h2>
+            <p className="text-xs text-muted-foreground">Analizuje cały miesiąc. Napędzany przez Google Gemini</p>
           </div>
         </div>
 
         <Button
-          onClick={handleAnalyze}
-          disabled={loading || subscriptions.length === 0}
+          onClick={analyze}
+          disabled={loading || !hasData}
           className="gap-2 bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]"
         >
           {loading ? (
@@ -114,25 +106,34 @@ export function AiAdvisorCard({ subscriptions }: { subscriptions: Subscription[]
               <Loader2 className="h-4 w-4 animate-spin" />
               Analizuję...
             </>
+          ) : advice ? (
+            <>
+              <RefreshCw className="h-4 w-4" />
+              Odśwież analizę
+            </>
           ) : (
-            "Analizuj wydatki"
+            "Analizuj budżet"
           )}
         </Button>
       </div>
 
-      <div className="relative">
-        {subscriptions.length === 0 && (
+      <div className="relative mt-5" aria-live="polite">
+        {!hasData && (
           <p className="text-sm text-muted-foreground">
-            Dodaj co najmniej jedną subskrypcję, żeby AI mogło ją przeanalizować.
+            Dodaj kilka wydatków albo płatności cyklicznych, żeby AI miało co analizować.
           </p>
         )}
 
-        {subscriptions.length > 0 && !advice && !loading && !error && (
-          <div className="rounded-xl border border-dashed border-white/10 p-5 text-sm text-muted-foreground">
-            Gemini przeanalizuje{" "}
-            <span className="font-mono text-foreground">{subscriptions.length}</span> subskrypcji w{" "}
-            <span className="font-mono text-foreground">{activeCategories(subscriptions).length}</span> kategoriach,
-            wskaże nakładające się usługi i oszacuje, ile możesz zaoszczędzić.
+        {hasData && !advice && !loading && !error && (
+          <div className="rounded-xl border border-dashed border-white/10 p-5 text-sm leading-relaxed text-muted-foreground">
+            Gemini przejrzy <span className="font-mono text-foreground">{snapshot.expenseCount}</span> wydatków w{" "}
+            <span className="font-mono text-foreground">{snapshot.categories.length}</span> kategoriach i{" "}
+            <span className="font-mono text-foreground">{snapshot.recurring.length}</span> płatności cyklicznych,
+            sprawdzi limity i prognozę, a potem wskaże ryzyka oraz konkretne oszczędności.
+            <p className="mt-2 text-xs">
+              Do AI trafiają kategorie, sumy i nazwy płatności cyklicznych. Nie wysyłamy opisów wydatków ani adresu
+              e-mail.
+            </p>
           </div>
         )}
 
@@ -148,11 +149,106 @@ export function AiAdvisorCard({ subscriptions }: { subscriptions: Subscription[]
           </div>
         )}
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && !loading && <p className="text-sm text-red-400">{error}</p>}
 
-        {advice && (
-          <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.03] p-5">
-            <Advice text={advice} />
+        {advice && !loading && (
+          <div className="flex flex-col gap-6">
+            <div>
+              <p className="font-display text-xl font-semibold leading-snug text-foreground sm:text-2xl">
+                {advice.headline}
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{advice.summary}</p>
+            </div>
+
+            {savingsTotal > 0 && (
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-2 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">Możliwe oszczędności</p>
+                  <p className="font-mono text-2xl font-semibold tabular-nums text-emerald-300">
+                    {formatPLN(savingsTotal)}
+                    <span className="ml-1 text-sm font-normal text-muted-foreground">/ mies.</span>
+                  </p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  to ok. <span className="font-mono text-foreground">{formatPLN(savingsTotal * 12)}</span> rocznie
+                </p>
+              </div>
+            )}
+
+            {(advice.risks.length > 0 || advice.savings.length > 0) && (
+              <div className="grid gap-5 lg:grid-cols-2">
+                {advice.risks.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-foreground">
+                      <AlertTriangle className="h-4 w-4 text-amber-300" />
+                      Co warto sprawdzić
+                    </h3>
+                    <ul className="flex flex-col gap-2.5">
+                      {advice.risks.map((risk, i) => {
+                        const sev = SEVERITY[risk.severity];
+                        return (
+                          <li key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-3.5">
+                            <div className="flex items-start justify-between gap-3">
+                              <p className="text-sm font-medium text-foreground">{risk.title}</p>
+                              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${sev.cls}`}>
+                                {sev.label}
+                              </span>
+                            </div>
+                            {risk.detail && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{risk.detail}</p>}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+
+                {advice.savings.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-foreground">
+                      <Target className="h-4 w-4 text-emerald-300" />
+                      Gdzie możesz zaoszczędzić
+                    </h3>
+                    <ul className="flex flex-col gap-2.5">
+                      {advice.savings.map((saving, i) => (
+                        <li key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-3.5">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="text-sm font-medium text-foreground">{saving.title}</p>
+                            {saving.monthlySaving > 0 && (
+                              <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-emerald-300">
+                                −{formatPLN(saving.monthlySaving)}
+                              </span>
+                            )}
+                          </div>
+                          {saving.detail && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{saving.detail}</p>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {advice.actions.length > 0 && (
+              <div>
+                <h3 className="mb-3 text-sm font-medium text-foreground">Następne kroki</h3>
+                <ul className="flex flex-col gap-2">
+                  {advice.actions.map((action, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      {action}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <p className="text-[11px] text-muted-foreground">
+              {at &&
+                `Wygenerowano o ${new Date(at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}. `}
+              Analiza AI może zawierać błędy i nie jest poradą finansową.
+            </p>
           </div>
         )}
       </div>
