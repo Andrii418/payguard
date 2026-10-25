@@ -1,7 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import { toISODate } from "@/lib/dates";
+import { CAPTCHA_FAILED_MESSAGE, isCaptchaError } from "@/lib/captcha";
 
-const DEMO_SUBSCRIPTION_LIMIT = 350; // limit na subskrypcje (profiles.budget_limit)
+const DEMO_SUBSCRIPTION_LIMIT = 350; 
 
 interface DemoRecurring {
   name: string;
@@ -9,15 +10,13 @@ interface DemoRecurring {
   billing_cycle: "monthly" | "yearly";
   category: string;
   kind: "subscription" | "fixed";
-  inDays: number; // za ile dni najbliższa płatność, liczone od dziś (ujemne = już minęła)
+  inDays: number; 
 }
 
-// Funkcja, a nie stała: "pierwszy dzień miesiąca" zależy od dnia, w którym ktoś uruchomi demo.
 function buildRecurring(): DemoRecurring[] {
   const monthStart = 1 - new Date().getDate();
 
   return [
-    // Czynsz ma termin 1. dnia miesiąca, więc silnik zaksięguje go sam po wejściu do aplikacji
     { name: "Czynsz", price: 1850, billing_cycle: "monthly", category: "home", kind: "fixed", inDays: monthStart },
     { name: "Netflix", price: 43.99, billing_cycle: "monthly", category: "fun", kind: "subscription", inDays: 2 },
     { name: "Spotify", price: 23.99, billing_cycle: "monthly", category: "fun", kind: "subscription", inDays: 5 },
@@ -40,7 +39,6 @@ interface DemoExpense {
   recurring_kind?: "subscription" | "fixed";
 }
 
-// Wydatki zmienne bieżącego miesiąca: daysAgo liczone wstecz od dziś (nie wychodzimy poza bieżący miesiąc).
 const DEMO_EXPENSES: Array<DemoExpense & { daysAgo: number }> = [
   { description: "Zakupy spożywcze", category: "food", amount: 213.8, daysAgo: 0 },
   { description: "Kawa i obiad", category: "food", amount: 46.5, daysAgo: 1 },
@@ -61,8 +59,6 @@ const DEMO_EXPENSES: Array<DemoExpense & { daysAgo: number }> = [
   { description: "Zakupy spożywcze", category: "food", amount: 201.3, daysAgo: 21 },
 ];
 
-// Poprzedni miesiąc: stałe dni, żeby przełącznik miesięcy i porównania miały co pokazać.
-// Wpisy z recurring_kind to płatności cykliczne zaksięgowane w tamtym miesiącu.
 const DEMO_PREVIOUS_MONTH: Array<DemoExpense & { day: number }> = [
   { description: "Czynsz", category: "home", amount: 1850, day: 1, recurring_kind: "fixed" },
   { description: "Netflix", category: "fun", amount: 43.99, day: 2, recurring_kind: "subscription" },
@@ -92,7 +88,6 @@ const DEMO_BUDGETS = [
   { category: "shopping", amount: 400 },
 ];
 
-// Daty liczymy względem "dziś", żeby demo zawsze wyglądało na żywe.
 function daysFromNow(days: number) {
   const d = new Date();
   d.setDate(d.getDate() + days);
@@ -123,8 +118,6 @@ async function seedDemoData(userId: string): Promise<string | null> {
     spent_on: toISODate(new Date(now.getFullYear(), now.getMonth() - 1, day)),
   }));
 
-  // Starsze miesiące (2-5 wstecz), żeby wykres trendu na Przeglądzie miał historię.
-  // Płatności stałe zostają takie same, wydatki zmienne różnią się o kilka procent.
   const OLDER_MONTH_FACTORS = [0.93, 1.06, 0.89, 0.97];
 
   const olderRows = OLDER_MONTH_FACTORS.flatMap((factor, i) =>
@@ -136,7 +129,6 @@ async function seedDemoData(userId: string): Promise<string | null> {
     }))
   );
 
-  // Wydatki i budżety są dodatkiem - ich ewentualny błąd nie blokuje startu demo.
   const { error: expensesError } = await supabase
     .from("expenses")
     .insert([...currentRows, ...previousRows, ...olderRows]);
@@ -152,14 +144,23 @@ async function seedDemoData(userId: string): Promise<string | null> {
   return null;
 }
 
-export async function startDemo(): Promise<{ error: string | null }> {
-  // Jeśli ktoś ma już sesję (demo albo prawdziwe konto), NIE tworzymy nowej -
-  // inaczej nadpisalibyśmy sesję prawdziwego użytkownika anonimową.
+export async function startDemo(
+  getCaptchaToken?: () => Promise<string | undefined>
+): Promise<{ error: string | null }> {
   const { data: sessionData } = await supabase.auth.getSession();
   if (sessionData.session) return { error: null };
 
-  const { data, error } = await supabase.auth.signInAnonymously();
+  let captchaToken: string | undefined;
+  try {
+    captchaToken = await getCaptchaToken?.();
+  } catch {
+    return { error: CAPTCHA_FAILED_MESSAGE };
+  }
+
+  const { data, error } = await supabase.auth.signInAnonymously({ options: { captchaToken } });
+
   if (error || !data.user) {
+    if (isCaptchaError(error?.message)) return { error: CAPTCHA_FAILED_MESSAGE };
     return { error: error?.message ?? "Nie udało się uruchomić trybu demo." };
   }
 
@@ -169,8 +170,6 @@ export async function startDemo(): Promise<{ error: string | null }> {
 export async function resetDemoData(): Promise<{ error: string | null }> {
   const { data } = await supabase.auth.getUser();
 
-  // BEZPIECZNIK: reset kasuje dane, więc wolno go wykonać wyłącznie na koncie anonimowym.
-  // Prawdziwy użytkownik nigdy nie straci danych.
   if (!data.user?.is_anonymous) {
     return { error: "Reset jest dostępny tylko w trybie demo." };
   }
