@@ -12,6 +12,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  Repeat,
   Lock,
   Mail,
   ShieldCheck,
@@ -44,11 +45,11 @@ interface FeedEvent {
 }
 
 const EVENTS: FeedEvent[] = [
-  { icon: Bell, tone: "amber", title: "Netflix odnawia się za 2 dni", meta: "43,99 zł" },
-  { icon: Sparkles, tone: "violet", title: "AI wykryło 4 platformy streamingowe", meta: "możliwe −63 zł" },
-  { icon: TrendingDown, tone: "emerald", title: "Wydatki niższe o 12% niż w zeszłym miesiącu", meta: "−28,50 zł" },
+  { icon: Repeat, tone: "emerald", title: "Czynsz zaksięgowany automatycznie", meta: "−1 850,00 zł" },
+  { icon: Bell, tone: "amber", title: "Jedzenie: wykorzystano 85% limitu", meta: "zostało 135 zł" },
+  { icon: Sparkles, tone: "violet", title: "AI: dwie platformy streamingowe się nakładają", meta: "możliwe −30 zł/mies." },
+  { icon: TrendingDown, tone: "emerald", title: "Wydatki niższe o 12% niż w zeszłym miesiącu", meta: "do tego samego dnia" },
   { icon: Mail, tone: "sky", title: "Tygodniowe podsumowanie jest gotowe", meta: "poniedziałek 8:00" },
-  { icon: Lock, tone: "emerald", title: "Twoje dane widzisz tylko Ty (RLS)", meta: "zabezpieczone" },
 ];
 
 const STRENGTH = [
@@ -203,14 +204,14 @@ export default function LoginPage() {
 
         <div className="relative max-w-md">
           <h2 className="font-display text-4xl font-semibold leading-tight text-foreground">
-            Twoje subskrypcje. <span className="text-gradient">Pod pełną kontrolą.</span>
+            Cały Twój budżet. <span className="text-gradient">Pod kontrolą.</span>
           </h2>
 
           <ul className="mt-7 flex flex-col gap-3 text-sm text-muted-foreground">
             {[
-              "Wykresy kosztów i prognoza na żywo",
-              "Przypomnienia e-mail przed każdym odnowieniem",
-              "Dane chronione na poziomie bazy (RLS)",
+              "Wydatki, limity i prognoza w jednym miejscu",
+              "Czynsz i subskrypcje księgują się same",
+              "Doradca AI analizuje cały Twój miesiąc",
             ].map((t) => (
               <li key={t} className="flex items-center gap-3">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300">

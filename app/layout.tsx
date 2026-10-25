@@ -21,8 +21,15 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PayGuard — Inteligentny Menedżer Subskrypcji",
-  description: "Analizuj wydatki, przewiduj odnowienia i oszczędzaj dzięki AI.",
+  title: "PayGuard: budżet, wydatki i doradca AI",
+  description:
+    "Zapisuj wydatki, pilnuj limitów i pozwól, żeby czynsz oraz subskrypcje księgowały się same. Doradca AI analizuje cały Twój miesiąc.",
+  openGraph: {
+    title: "PayGuard: budżet, wydatki i doradca AI",
+    description: "Zawsze wiesz, ile możesz jeszcze wydać.",
+    type: "website",
+    locale: "pl_PL",
+  },
 };
 
 export const viewport: Viewport = {
