@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { authedFetch } from "@/lib/api-client";
+import { Captcha, type CaptchaHandle } from "@/components/captcha";
+import { CAPTCHA_FAILED_MESSAGE, isCaptchaError } from "@/lib/captcha";
 import {
   ArrowLeft,
   Bell,
@@ -86,7 +88,6 @@ function translateAuthError(message: string, mode: Mode): string {
     : "Nie udało się utworzyć konta. Spróbuj ponownie.";
 }
 
-// Przykładowe powiadomienia - co ~3 s wjeżdża nowe, a najstarsze znika.
 function LiveFeed() {
   const [tick, setTick] = useState(0);
 
@@ -136,8 +137,8 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const captchaRef = useRef<CaptchaHandle>(null);
 
-  // Linki "Zacznij za darmo" prowadzą tu z ?mode=signup
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("mode") === "signup") {
       setMode("signup");
@@ -170,15 +171,30 @@ export default function LoginPage() {
     setFieldErrors({});
     setLoading(true);
 
+    let captchaToken: string | undefined;
+    try {
+      captchaToken = await captchaRef.current?.getToken();
+    } catch {
+      captchaRef.current?.reset();
+      setLoading(false);
+      setFormError(CAPTCHA_FAILED_MESSAGE);
+      return;
+    }
+
     const credentials = parsed.data;
+    const options = { captchaToken };
     const { error } =
       mode === "login"
-        ? await supabase.auth.signInWithPassword(credentials)
-        : await supabase.auth.signUp(credentials);
+        ? await supabase.auth.signInWithPassword({ ...credentials, options })
+        : await supabase.auth.signUp({ ...credentials, options });
+
+    captchaRef.current?.reset();
 
     if (error) {
       setLoading(false);
-      setFormError(translateAuthError(error.message, mode));
+      setFormError(
+        isCaptchaError(error.message) ? CAPTCHA_FAILED_MESSAGE : translateAuthError(error.message, mode)
+      );
       return;
     }
 
@@ -186,14 +202,12 @@ export default function LoginPage() {
       authedFetch("/api/send-welcome-email", { method: "POST" }).catch(() => {});
     }
 
-    // Przycisk zostaje zablokowany do przejścia na dashboard - nie da się wysłać formularza dwa razy.
     router.push("/dashboard");
     router.refresh();
   }
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      {/* ===== Lewy panel: marka + żywy feed ===== */}
       <aside className="relative hidden flex-col justify-between overflow-hidden border-r border-white/[0.06] p-12 lg:flex">
         <AuroraBackground />
 
@@ -235,7 +249,6 @@ export default function LoginPage() {
         </p>
       </aside>
 
-      {/* ===== Prawa strona: formularz ===== */}
       <main className="relative flex flex-col px-6 py-8 sm:px-12">
         <div className="flex items-center justify-between">
           <Link
@@ -253,7 +266,6 @@ export default function LoginPage() {
 
         <div className="my-auto flex w-full justify-center py-10">
           <div className="glass-card w-full max-w-[480px] p-6 min-[400px]:p-8 sm:p-10">
-            {/* Przełącznik trybu z płynnym wskaźnikiem */}
             <div className="relative mb-8 grid grid-cols-2 rounded-xl border border-white/10 bg-white/[0.03] p-1">
               {(["login", "signup"] as const).map((m) => (
                 <button
@@ -374,6 +386,8 @@ export default function LoginPage() {
                 </motion.p>
               )}
 
+              <Captcha ref={captchaRef} mode="auto" className="flex justify-center" />
+
               <button
                 type="submit"
                 disabled={loading}
@@ -400,6 +414,7 @@ export default function LoginPage() {
 
             <DemoButton
               size="lg"
+              fullWidth
               className="h-12 w-full border-white/10 bg-white/[0.03] text-base hover:border-emerald-500/30 hover:bg-white/[0.06]"
             />
 
