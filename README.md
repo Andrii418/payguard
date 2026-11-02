@@ -96,7 +96,6 @@ app/
   login/                Logowanie i rejestracja
   api/analyze/          Doradca AI
   api/cron/             Zadania cykliczne (daily, post-recurring, przypomnienia, podsumowanie, sprzątanie demo)
-  api/send-welcome-email/
 components/             Komponenty UI i sekcje aplikacji
 lib/                    Logika: analityka miesiąca, migawka budżetu, alerty, demo, hooki, schematy Zod
 supabase/schema.sql     Schemat bazy danych (tabele, RLS, funkcje)
