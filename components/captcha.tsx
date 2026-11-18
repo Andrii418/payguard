@@ -14,15 +14,7 @@ interface CaptchaProps {
   className?: string;
 }
 
-const TIMEOUT_MS = 25_000;
-
-function readToken(widget: TurnstileInstance): string | undefined {
-  try {
-    return widget.getResponse() || undefined;
-  } catch {
-    return undefined;
-  }
-}
+const TIMEOUT_MS = 30_000;
 
 export const Captcha = forwardRef<CaptchaHandle, CaptchaProps>(function Captcha({ mode, className }, ref) {
   const widgetRef = useRef<TurnstileInstance | null>(null);
@@ -36,25 +28,9 @@ export const Captcha = forwardRef<CaptchaHandle, CaptchaProps>(function Captcha(
         const widget = widgetRef.current;
         if (!widget) throw new Error("Widżet CAPTCHA nie jest jeszcze gotowy.");
 
-        if (mode === "auto" && widget.isExpired()) widget.reset();
-
-        const deadline = Date.now() + TIMEOUT_MS;
-
-        while (Date.now() < deadline) {
-          if (mode === "on-demand") {
-            try {
-              widget.execute();
-            } catch {
-            }
-          }
-
-          const token = readToken(widget);
-          if (token) return token;
-
-          await new Promise((resolve) => setTimeout(resolve, 400));
-        }
-
-        throw new Error("Przekroczono czas weryfikacji CAPTCHA.");
+        if (widget.isExpired()) widget.reset();
+        if (mode === "on-demand") widget.execute();
+        return widget.getResponsePromise(TIMEOUT_MS);
       },
 
       reset() {
@@ -77,7 +53,7 @@ export const Captcha = forwardRef<CaptchaHandle, CaptchaProps>(function Captcha(
         options={{
           theme: "dark",
           language: "pl",
-          appearance: "interaction-only",
+          appearance: mode === "auto" ? "always" : "interaction-only",
           execution: mode === "on-demand" ? "execute" : "render",
           responseField: false,
         }}
