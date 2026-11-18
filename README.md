@@ -10,15 +10,6 @@ Przycisk „Wypróbuj demo" tworzy tymczasowe, anonimowe konto z przykładowymi 
 
 > Projekt portfolio, stworzony w celach edukacyjnych. Nie łączy się z kontem bankowym, a wydatki wpisuje się ręcznie.
 
-<!--
-Zrzuty ekranu (odkomentuj po dodaniu plików do folderu docs/):
-
-![Przegląd budżetu](docs/overview.png)
-![Wydatki i limity](docs/expenses.png)
-![Doradca AI](docs/advisor.png)
-![Widok mobilny](docs/mobile.png)
--->
-
 ## Funkcje
 
 **Budżet i wydatki**
@@ -48,7 +39,6 @@ Zrzuty ekranu (odkomentuj po dodaniu plików do folderu docs/):
 
 **Tryb demo**
 - Anonimowe logowanie Supabase z przykładowymi danymi, reset jednym kliknięciem, automatyczne usuwanie kont po 7 dniach
-- Opcjonalna ochrona CAPTCHA (Cloudflare Turnstile) przy logowaniu, rejestracji i trybie demo
 
 **Doświadczenie użytkownika**
 - Paleta komend `Ctrl+K` (nawigacja, akcje, wyszukiwanie płatności)
@@ -82,7 +72,6 @@ Zrzuty ekranu (odkomentuj po dodaniu plików do folderu docs/):
 | AI | Google Gemini (`@google/genai`) |
 | Walidacja | Zod |
 | E-mail | Resend |
-| Ochrona przed botami | Cloudflare Turnstile (opcjonalnie) |
 | Hosting i cron | Vercel |
 
 ## Struktura projektu

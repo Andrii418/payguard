@@ -35,7 +35,6 @@ const navItems = [
 ];
 
 interface NavSidebarProps {
-  // Zostawione dla zgodności ze stronami, które je jeszcze przekazują. Karta pokazuje teraz prawdziwe wydatki miesiąca.
   monthlyCost?: number;
 }
 
@@ -54,7 +53,6 @@ export function NavSidebar(_props: NavSidebarProps) {
     .filter((e) => e.spent_on.startsWith(month))
     .reduce((sum, e) => sum + e.amount, 0);
 
-  // Panel jest "otwarty dla konkretnej ścieżki": po przejściu na inną stronę zamyka się sam.
   const [openFor, setOpenFor] = useState<string | null>(null);
   const open = openFor === pathname;
   const openDrawer = () => setOpenFor(pathname);

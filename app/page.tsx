@@ -92,7 +92,6 @@ export default function LandingPage() {
     <div className="min-h-screen">
       <LandingNavbar />
 
-      {/* ===== Hero ===== */}
       <section className="relative overflow-hidden">
         <AuroraBackground />
 
@@ -152,7 +151,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== Pasek kategorii ===== */}
       <section className="border-y border-white/[0.06] bg-white/[0.015] py-8">
         <p className="mb-5 text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">
           Śledź wszystko: od codziennych zakupów po czynsz
@@ -160,7 +158,6 @@ export default function LandingPage() {
         <Marquee />
       </section>
 
-      {/* ===== Funkcje (bento) ===== */}
       <section id="features" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
         <Reveal className="mx-auto mb-14 max-w-2xl text-center">
           <h2 className="font-display text-3xl font-semibold text-foreground sm:text-4xl">
@@ -172,7 +169,6 @@ export default function LandingPage() {
         </Reveal>
 
         <div className="grid gap-4 md:grid-cols-3">
-          {/* Doradca AI */}
           <Reveal className="md:col-span-2">
             <SpotlightCard className="h-full p-7">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/10 text-violet-300">
@@ -211,7 +207,6 @@ export default function LandingPage() {
             </SpotlightCard>
           </Reveal>
 
-          {/* Płatności cykliczne */}
           <Reveal delay={0.08}>
             <SpotlightCard className="h-full p-7">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-300">
@@ -247,7 +242,6 @@ export default function LandingPage() {
             </SpotlightCard>
           </Reveal>
 
-          {/* Limity */}
           <Reveal>
             <SpotlightCard className="h-full p-7">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-300">
@@ -277,7 +271,6 @@ export default function LandingPage() {
             </SpotlightCard>
           </Reveal>
 
-          {/* Prognoza */}
           <Reveal delay={0.08}>
             <SpotlightCard className="h-full p-7">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300">
@@ -296,7 +289,6 @@ export default function LandingPage() {
             </SpotlightCard>
           </Reveal>
 
-          {/* Bezpieczeństwo */}
           <Reveal delay={0.16}>
             <SpotlightCard className="h-full p-7">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-500/10 text-sky-300">
@@ -316,7 +308,6 @@ export default function LandingPage() {
         <p className="mt-6 text-center text-xs text-muted-foreground">Liczby w kartach to przykładowe dane.</p>
       </section>
 
-      {/* ===== Jak to działa ===== */}
       <section id="how" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-24">
         <Reveal className="mx-auto mb-14 max-w-2xl text-center">
           <h2 className="font-display text-3xl font-semibold text-foreground sm:text-4xl">Jak to działa</h2>
@@ -341,7 +332,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== Kalkulator ===== */}
       <section id="calculator" className="mx-auto max-w-5xl scroll-mt-24 px-6 py-24">
         <Reveal className="mx-auto mb-12 max-w-2xl text-center">
           <h2 className="font-display text-3xl font-semibold text-foreground sm:text-4xl">
@@ -356,7 +346,6 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      {/* ===== Pod maską ===== */}
       <section className="mx-auto max-w-4xl px-6 py-16 text-center">
         <Reveal>
           <p className="mb-5 text-xs uppercase tracking-[0.2em] text-muted-foreground">Pod maską</p>
@@ -373,7 +362,6 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      {/* ===== FAQ ===== */}
       <section id="faq" className="mx-auto max-w-3xl scroll-mt-24 px-6 py-24">
         <Reveal className="mb-10 text-center">
           <h2 className="font-display text-3xl font-semibold text-foreground sm:text-4xl">Najczęstsze pytania</h2>
@@ -394,7 +382,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== Końcowe CTA ===== */}
       <section className="mx-auto max-w-5xl px-6 pb-24">
         <Reveal>
           <div className="glass-card relative overflow-hidden px-6 py-16 text-center sm:px-12">
@@ -421,7 +408,6 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      {/* ===== Stopka ===== */}
       <footer className="border-t border-white/[0.06] px-6 py-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">

@@ -16,9 +16,9 @@ export interface CategorySpend {
 export interface DailyPoint {
   day: number;
   label: string;
-  amount: number; // razem tego dnia
-  fixed: number; // z płatności cyklicznych
-  variable: number; // pozostałe
+  amount: number; 
+  fixed: number; 
+  variable: number; 
   cumulative: number;
 }
 
@@ -28,13 +28,13 @@ export interface MonthSummary {
   daysTotal: number;
   daysElapsed: number;
   count: number;
-  total: number; // wszystko, co wydano w miesiącu
-  fixedTotal: number; // koszty stałe (płatności cykliczne)
-  variableTotal: number; // koszty zmienne
-  scheduled: number; // płatności cykliczne, które jeszcze padną w tym miesiącu
+  total: number; 
+  fixedTotal: number; 
+  variableTotal: number; 
+  scheduled: number;
   byCategory: CategorySpend[];
   daily: DailyPoint[];
-  dailyAverage: number; // średnia dzienna kosztów zmiennych
+  dailyAverage: number; 
   projectedTotal: number | null;
 }
 
@@ -42,7 +42,6 @@ export function isRecurringExpense(e: Expense): boolean {
   return Boolean(e.recurring_id || e.recurring_kind);
 }
 
-// Suma płatności cyklicznych, które padną jeszcze w tym miesiącu (po dzisiejszym dniu).
 export function scheduledRemaining(subscriptions: Subscription[]): number {
   const today = toISODate(new Date());
   const month = today.slice(0, 7);
@@ -57,7 +56,7 @@ export function summarizeMonth(expenses: Expense[], month: string, scheduled = 0
   const daysTotal = daysInMonth(month);
   const current = monthKey();
   const isCurrent = month === current;
-  const isPast = month < current; // porównanie tekstowe działa dla formatu YYYY-MM
+  const isPast = month < current; 
   const daysElapsed = isCurrent ? new Date().getDate() : isPast ? daysTotal : 0;
 
   const spent: Record<string, number> = {};
@@ -113,8 +112,6 @@ export function summarizeMonth(expenses: Expense[], month: string, scheduled = 0
   const dailyAverage = daysElapsed > 0 ? variableTotal / daysElapsed : 0;
   const remainingDays = Math.max(daysTotal - daysElapsed, 0);
 
-  // Prognoza: wydano + tempo kosztów zmiennych na pozostałe dni + zaplanowane płatności cykliczne.
-  // W pierwszych dniach miesiąca próbka jest za mała, więc jej nie pokazujemy.
   const projectedTotal =
     isCurrent && daysElapsed >= 3 ? total + dailyAverage * remainingDays + scheduled : null;
 
@@ -135,8 +132,6 @@ export function summarizeMonth(expenses: Expense[], month: string, scheduled = 0
   };
 }
 
-// Porównanie "uczciwe": w trwającym miesiącu zestawiamy z poprzednim do TEGO SAMEGO dnia,
-// a nie z jego pełną sumą (inaczej 10. dnia miesiąca zawsze wyglądalibyśmy świetnie).
 export function comparablePrevious(summary: MonthSummary, previous: MonthSummary): number {
   if (!summary.isCurrent) return previous.total;
   return previous.daily.slice(0, summary.daysElapsed).reduce((sum, p) => sum + p.amount, 0);

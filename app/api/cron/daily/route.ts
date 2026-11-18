@@ -12,7 +12,6 @@ async function runJob(name: string, handler: (req: NextRequest) => Promise<Respo
     const res = await handler(req);
     return { job: name, status: res.status, result: await res.json() };
   } catch (err) {
-    // Błąd jednego zadania nie blokuje pozostałych.
     console.error(`Zadanie cron "${name}" nie powiodło się:`, err);
     return { job: name, status: 500, result: null };
   }
@@ -26,7 +25,6 @@ export async function GET(req: NextRequest) {
   const results = [await runJob("post-recurring", postRecurring, req)];
   results.push(await runJob("renewal-reminders", renewalReminders, req));
 
-  // Tygodniowe podsumowanie wysyłamy tylko w poniedziałki (harmonogramy Vercela są w UTC).
   if (new Date().getUTCDay() === 1) {
     results.push(await runJob("weekly-digest", weeklyDigest, req));
   }

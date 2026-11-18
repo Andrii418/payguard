@@ -10,7 +10,6 @@ import {
 import { Repeat, Sparkles } from "lucide-react";
 import { AnimatedNumber } from "@/components/animated-number";
 
-// Przykładowy miesiąc: v = wydatki zmienne danego dnia, f = płatność stała (fioletowy fragment słupka).
 const DAYS = [
   { v: 28, f: 42 },
   { v: 14, f: 0 },
@@ -83,7 +82,6 @@ export function HeroPreview() {
             <span className="ml-auto font-mono text-xs text-muted-foreground">z 4 800 zł</span>
           </div>
 
-          {/* Stałe i zmienne */}
           <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-white/[0.06]">
             <div className="h-full bg-indigo-400" style={{ width: "66%" }} />
             <div className="h-full bg-emerald-400" style={{ width: "34%" }} />
@@ -97,7 +95,6 @@ export function HeroPreview() {
             </span>
           </div>
 
-          {/* Budżet */}
           <div className="mt-4">
             <div className="mb-1.5 flex justify-between text-[11px] text-muted-foreground">
               <span>Wykorzystano 71% budżetu</span>
@@ -116,7 +113,6 @@ export function HeroPreview() {
             </p>
           </div>
 
-          {/* Wydatki dzień po dniu */}
           <div className="mt-4 flex h-16 items-end gap-1">
             {DAYS.map((d, i) => (
               <div key={i} className="flex h-full flex-1 flex-col justify-end">
@@ -143,7 +139,6 @@ export function HeroPreview() {
           </p>
         </div>
 
-        {/* Pływające powiadomienia "wysunięte" przed kartę (translateZ) */}
         <div className="absolute -right-3 -top-6 sm:-right-10" style={{ transform: "translateZ(70px)" }}>
           <div className="animate-float flex items-center gap-2.5 rounded-xl border border-indigo-400/25 bg-[#0d1017]/95 px-3.5 py-2.5 shadow-xl shadow-black/40">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-300">

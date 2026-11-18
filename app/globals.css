@@ -4,7 +4,6 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Mapowanie standardowych tokenów shadcn */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -28,17 +27,14 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Nasze własne tokeny PayGuard (paleta obsydian/szmaragd) */
   --color-obsidian: #090a0f;
   --color-emerald-400: #34d399;
   --color-emerald-500: #10b981;
 
-  /* Podpięcie fontów pod utility-klasy font-display / font-body / font-mono */
   --font-display: var(--font-heading);
   --font-body: var(--font-body-sans);
   --font-mono: var(--font-data);
 
-  /* Animacja pulsującej poświaty */
   --animate-pulse-glow: pulse-glow 6s ease-in-out infinite;
 }
 
@@ -72,8 +68,6 @@
     min-height: 100vh;
   }
 
-  /* Jedyny, celowy ruch tła w całej aplikacji - wolno dryfująca poświata.
-     To nasz "signature moment", więc więcej animacji w tle nie dodajemy. */
   body::before {
     content: "";
     position: fixed;
@@ -86,7 +80,6 @@
     animation: ambient-drift 26s ease-in-out infinite alternate;
   }
 
-  /* Delikatna faktura "ziarna" - daje wrażenie materiału, nie płaskiego PNG */
   body::after {
     content: "";
     position: fixed;
@@ -98,14 +91,12 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  /* Czytelny, zgodny z motywem focus ring dla dostępności klawiaturowej */
   :focus-visible {
     outline: 2px solid rgba(52, 211, 153, 0.6);
     outline-offset: 2px;
     border-radius: 6px;
   }
 
-  /* Szczupły, szmaragdowy scrollbar zamiast domyślnego systemowego */
   * {
     scrollbar-width: thin;
     scrollbar-color: rgba(16, 185, 129, 0.25) transparent;
@@ -128,8 +119,6 @@
 }
 
 @layer components {
-  /* Karta "szklana" v2 - delikatny wewnętrzny rozbłysk u góry (efekt prawdziwego
-     szkła), głębszy cień i płynna reakcja na hover zamiast statycznej płaszczyzny. */
   .glass-card {
     @apply relative rounded-2xl border border-emerald-500/15 bg-white/[0.025] backdrop-blur-xl;
     box-shadow:
@@ -168,7 +157,6 @@
   }
 }
 
-/* Dostępność: dla osób wrażliwych na ruch wyłączamy animacje całkowicie */
 @media (prefers-reduced-motion: reduce) {
   body::before {
     animation: none;
@@ -182,15 +170,12 @@
   }
 }
 
-/* ===== Landing / logowanie: dodatki wizualne ===== */
-
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
   }
 }
 
-/* Siatka w tle, zanikająca ku brzegom */
 .bg-grid {
   background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
@@ -200,7 +185,6 @@
   mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 30%, transparent 75%);
 }
 
-/* Gradientowy tekst w nagłówkach */
 .text-gradient {
   background-image: linear-gradient(110deg, #34d399 0%, #38bdf8 45%, #a78bfa 100%);
   -webkit-background-clip: text;
@@ -208,7 +192,6 @@
   color: transparent;
 }
 
-/* Aurora: trzy wolno dryfujące plamy światła */
 @keyframes aurora-a {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(8%, 6%, 0) scale(1.15); }
@@ -225,7 +208,6 @@
 .animate-aurora-b { animation: aurora-b 22s ease-in-out infinite; }
 .animate-aurora-c { animation: aurora-c 26s ease-in-out infinite; }
 
-/* Przewijany pasek (marquee) */
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -233,14 +215,12 @@
 .animate-marquee { animation: marquee 45s linear infinite; }
 .animate-marquee:hover { animation-play-state: paused; }
 
-/* Pływające powiadomienia w podglądzie produktu */
 @keyframes float-y {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-9px); }
 }
 .animate-float { animation: float-y 6s ease-in-out infinite; }
 
-/* Przycisk z "błyskiem" przy najechaniu */
 .btn-shine {
   position: relative;
   overflow: hidden;
@@ -256,21 +236,16 @@
   transform: translateX(120%);
   transition: transform 0.7s ease;
 }
-/* ===== Mobile: poprawki globalne ===== */
 
 html {
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
 }
 
-/* Siatka bezpieczeństwa: zabłąkany element nigdy nie wywoła poziomego przewijania strony.
-   "clip" (w odróżnieniu od "hidden") nie psuje position: sticky. */
 body {
   overflow-x: clip;
 }
 
-/* iOS Safari przybliża stronę po kliknięciu w pole o czcionce mniejszej niż 16px.
-   Ta reguła działa tylko na telefonach, na komputerze pola wyglądają jak dotąd. */
 @media (max-width: 639px) {
   input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
   select,

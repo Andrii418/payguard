@@ -18,7 +18,7 @@ export function monthKey(d: Date = new Date()): string {
 
 export function parseMonthKey(key: string): { year: number; month: number } {
   const [year, month] = key.split("-").map(Number);
-  return { year, month }; // month: 1-12
+  return { year, month }; 
 }
 
 export function shiftMonth(key: string, delta: number): string {

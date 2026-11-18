@@ -109,7 +109,6 @@ export function ExpenseList({ expenses, loading, monthName, onChanged }: Expense
     );
   }
 
-  // Lista jest już posortowana malejąco po dacie, więc grupy powstają w dobrej kolejności.
   const groups = new Map<string, Expense[]>();
   for (const expense of expenses) {
     groups.set(expense.spent_on, [...(groups.get(expense.spent_on) ?? []), expense]);

@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error("Błąd wysyłki e-maila powitalnego:", error);
-      // Celowo nie blokujemy rejestracji: e-mail to funkcja poboczna.
       return NextResponse.json({ sent: false });
     }
 

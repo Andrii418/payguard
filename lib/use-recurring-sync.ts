@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { toISODate } from "@/lib/dates";
 
-let lastRun = 0; // nie odpytujemy bazy częściej niż raz na minutę (np. przy zmianie podstron)
+let lastRun = 0;
 
 function plural(n: number) {
   if (n === 1) return "płatność cykliczną";
@@ -16,8 +16,6 @@ function plural(n: number) {
     : "płatności cyklicznych";
 }
 
-// Przy wejściu do aplikacji księguje zaległe płatności cykliczne (czynsz, Netflix...).
-// Działa po stronie bazy, więc jest odporne na podwójne wywołanie.
 export function useRecurringSync() {
   useEffect(() => {
     if (Date.now() - lastRun < 60_000) return;
@@ -27,7 +25,6 @@ export function useRecurringSync() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
 
-      // Przekazujemy lokalną datę użytkownika, żeby "dziś" zgadzało się z jego dniem
       const { data, error } = await supabase.rpc("post_my_due_recurring", {
         p_today: toISODate(new Date()),
       });

@@ -36,9 +36,8 @@ export function MonthHero({ summary, previousComparable, limit, onSaveLimit }: M
 
   const usage = limit ? (total / limit) * 100 : null;
   const remaining = limit ? limit - total : null;
-  const daysLeft = isCurrent ? daysTotal - daysElapsed + 1 : 0; // wliczamy dzisiejszy dzień
+  const daysLeft = isCurrent ? daysTotal - daysElapsed + 1 : 0; 
 
-  // Ile można swobodnie wydawać dziennie: to, co zostało po odjęciu zaplanowanych płatności cyklicznych
   const free = limit !== null ? limit - total - scheduled : null;
   const perDay = free !== null && free > 0 && daysLeft > 0 ? free / daysLeft : null;
 
@@ -65,7 +64,6 @@ export function MonthHero({ summary, previousComparable, limit, onSaveLimit }: M
         <span className="font-mono text-xl text-muted-foreground">zł</span>
       </div>
 
-      {/* Stałe i zmienne */}
       {total > 0 && (
         <div className="relative mt-4">
           <div className="flex h-2 overflow-hidden rounded-full bg-white/[0.06]">
@@ -94,7 +92,6 @@ export function MonthHero({ summary, previousComparable, limit, onSaveLimit }: M
         </p>
       )}
 
-      {/* Budżet całego miesiąca */}
       <div className="relative mt-6">
         {limit && usage !== null && remaining !== null ? (
           <>

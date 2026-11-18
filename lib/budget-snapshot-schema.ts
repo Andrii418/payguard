@@ -4,7 +4,6 @@ const money = z.number().min(-10_000_000).max(10_000_000);
 const percent = z.number().min(-100_000).max(100_000);
 const text = (max: number) => z.string().max(max);
 
-// Migawka budżetu wysyłana do Gemini. Wszystkie liczby są policzone po stronie aplikacji.
 export const budgetSnapshotSchema = z.object({
   monthLabel: text(40),
   isCurrentMonth: z.boolean(),
@@ -62,7 +61,6 @@ export const budgetSnapshotSchema = z.object({
 
 export type BudgetSnapshot = z.infer<typeof budgetSnapshotSchema>;
 
-// Odpowiedź AI. Schemat jest łagodny: za długie teksty przycinamy, brakujące listy zamieniamy na puste.
 const clip = (max: number) =>
   z
     .string()

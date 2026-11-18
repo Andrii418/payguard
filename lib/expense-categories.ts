@@ -34,7 +34,6 @@ export const EXPENSE_CATEGORY_META: Record<ExpenseCategoryKey, ExpenseCategoryMe
   other: { label: "Inne", short: "Inne", color: "#94A3B8", icon: Tag },
 };
 
-// Stare nazwy kategorii (sprzed połączenia subskrypcji i wydatków) - dla pewności, gdyby jakiś rekord je miał.
 const LEGACY_ALIASES: Record<string, ExpenseCategoryKey> = {
   streaming: "fun",
   software: "work",

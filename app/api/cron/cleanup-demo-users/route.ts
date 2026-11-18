@@ -13,8 +13,6 @@ export async function GET(req: NextRequest) {
   const cutoff = Date.now() - MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
   let deleted = 0;
 
-  // Przechodzimy po stronach użytkowników. Usunięcia przesuwają paginację,
-  // więc pominięte w tym przebiegu konta zniknie następny przebieg.
   for (let page = 1; ; page += 1) {
     const { data, error } = await supabaseAdmin.auth.admin.listUsers({
       page,

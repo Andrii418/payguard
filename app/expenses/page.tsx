@@ -30,7 +30,6 @@ function ExpensesContent() {
   const { expenses, loading, live } = useExpenses(month, refreshKey);
   const { limits, saveBudget } = useBudgets(refreshKey);
 
-  // ?new=1 (z palety komend i z Przeglądu) ustawia fokus w polu kwoty szybkiego dodawania
   useEffect(() => {
     if (checkingAuth || !searchParams.get("new")) return;
 
@@ -53,9 +52,7 @@ function ExpensesContent() {
 
   if (checkingAuth) return <LoadingScreen />;
 
-  const refresh = () => setRefreshKey((k) => k + 1);
-
-  // Domyślna data nowego wydatku: dziś (bieżący miesiąc) albo ostatni dzień oglądanego miesiąca
+  const refresh = () => setRefreshKey((k) => k + 1)
   const defaultDate = isCurrent
     ? toISODate(new Date())
     : `${month}-${String(daysInMonth(month)).padStart(2, "0")}`;
@@ -110,7 +107,6 @@ function ExpensesContent() {
           <p className="mb-3 text-xs text-muted-foreground">
             Szybkie dodawanie: wpisz kwotę i wciśnij <kbd className="font-mono">Enter</kbd>.
           </p>
-          {/* key={month}: zmiana miesiąca resetuje formularz i domyślną datę */}
           <ExpenseForm
             key={month}
             layout="inline"

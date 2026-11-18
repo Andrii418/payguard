@@ -86,9 +86,6 @@ interface ItemProps {
   totalMonthlyCost: number;
   onChanged: () => void;
 }
-
-// Telefon: akcje w osobnym rzędzie pod wierszem. Od 640 px: jak dotąd, z prawej strony,
-// a na desktopie (md+) pojawiają się po najechaniu.
 const rowActionsClass =
   "flex basis-full items-center justify-end gap-6 border-t border-white/[0.06] pt-2.5 transition-opacity sm:basis-auto sm:justify-start sm:gap-3 sm:border-0 sm:pt-0 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100";
 

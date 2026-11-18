@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { authedFetch } from "@/lib/api-client";
-import { Captcha, type CaptchaHandle } from "@/components/captcha";
-import { CAPTCHA_FAILED_MESSAGE, isCaptchaError } from "@/lib/captcha";
 import {
   ArrowLeft,
   Bell,
@@ -75,6 +73,7 @@ function passwordScore(pw: string): number {
 
 function translateAuthError(message: string, mode: Mode): string {
   const m = message.toLowerCase();
+  if (m.includes("captcha")) return "CAPTCHA jest nadal włączona w Supabase. Wyłącz ją w ustawieniach Auth projektu.";
   if (m.includes("invalid login credentials")) return "Nieprawidłowy e-mail lub hasło.";
   if (m.includes("already registered") || m.includes("already been registered"))
     return "Konto z tym adresem e-mail już istnieje. Spróbuj się zalogować.";
@@ -137,7 +136,6 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const captchaRef = useRef<CaptchaHandle>(null);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("mode") === "signup") {
@@ -171,30 +169,15 @@ export default function LoginPage() {
     setFieldErrors({});
     setLoading(true);
 
-    let captchaToken: string | undefined;
-    try {
-      captchaToken = await captchaRef.current?.getToken();
-    } catch {
-      captchaRef.current?.reset();
-      setLoading(false);
-      setFormError(CAPTCHA_FAILED_MESSAGE);
-      return;
-    }
-
     const credentials = parsed.data;
-    const options = { captchaToken };
     const { error } =
       mode === "login"
-        ? await supabase.auth.signInWithPassword({ ...credentials, options })
-        : await supabase.auth.signUp({ ...credentials, options });
-
-    captchaRef.current?.reset();
+        ? await supabase.auth.signInWithPassword(credentials)
+        : await supabase.auth.signUp(credentials);
 
     if (error) {
       setLoading(false);
-      setFormError(
-        isCaptchaError(error.message) ? CAPTCHA_FAILED_MESSAGE : translateAuthError(error.message, mode)
-      );
+      setFormError(translateAuthError(error.message, mode));
       return;
     }
 
@@ -385,8 +368,6 @@ export default function LoginPage() {
                   {formError}
                 </motion.p>
               )}
-
-              <Captcha ref={captchaRef} mode="auto" className="flex justify-center" />
 
               <button
                 type="submit"

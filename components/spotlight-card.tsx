@@ -14,7 +14,6 @@ export function SpotlightCard({ children, className = "" }: SpotlightCardProps) 
     const el = ref.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    // Zapisujemy pozycję kursora jako zmienne CSS - bez re-renderu Reacta przy każdym ruchu myszy.
     el.style.setProperty("--mx", `${e.clientX - rect.left}px`);
     el.style.setProperty("--my", `${e.clientY - rect.top}px`);
   }

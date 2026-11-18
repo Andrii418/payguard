@@ -14,7 +14,6 @@ export interface MonthTotal {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-// Sumy z kilku poprzednich miesięcy (bez bieżącego). Brakujące miesiące uzupełniamy zerami.
 export function useMonthTotals(monthsBack: number, refreshKey: number) {
   const [totals, setTotals] = useState<MonthTotal[]>([]);
   const [loading, setLoading] = useState(true);

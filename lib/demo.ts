@@ -1,6 +1,5 @@
 import { supabase } from "@/lib/supabase";
 import { toISODate } from "@/lib/dates";
-import { CAPTCHA_FAILED_MESSAGE, isCaptchaError } from "@/lib/captcha";
 
 const DEMO_SUBSCRIPTION_LIMIT = 350; 
 
@@ -144,23 +143,16 @@ async function seedDemoData(userId: string): Promise<string | null> {
   return null;
 }
 
-export async function startDemo(
-  getCaptchaToken?: () => Promise<string | undefined>
-): Promise<{ error: string | null }> {
+export async function startDemo(): Promise<{ error: string | null }> {
   const { data: sessionData } = await supabase.auth.getSession();
   if (sessionData.session) return { error: null };
 
-  let captchaToken: string | undefined;
-  try {
-    captchaToken = await getCaptchaToken?.();
-  } catch {
-    return { error: CAPTCHA_FAILED_MESSAGE };
-  }
-
-  const { data, error } = await supabase.auth.signInAnonymously({ options: { captchaToken } });
+  const { data, error } = await supabase.auth.signInAnonymously();
 
   if (error || !data.user) {
-    if (isCaptchaError(error?.message)) return { error: CAPTCHA_FAILED_MESSAGE };
+    if (error?.message.toLowerCase().includes("captcha")) {
+      return { error: "CAPTCHA jest nadal włączona w Supabase. Wyłącz ją w ustawieniach Auth projektu." };
+    }
     return { error: error?.message ?? "Nie udało się uruchomić trybu demo." };
   }
 

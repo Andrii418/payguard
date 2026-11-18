@@ -1,11 +1,9 @@
-// Adres aplikacji w linkach z e-maili. Na Vercelu uzupełnia się sam, lokalnie wskazuje localhost.
 const baseUrl =
   process.env.SITE_URL ||
   (process.env.VERCEL_PROJECT_PRODUCTION_URL
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : "http://localhost:3001");
 
-// Nazwy płatności wpisuje użytkownik, więc przed wstawieniem do HTML-a zamieniamy znaki specjalne.
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")

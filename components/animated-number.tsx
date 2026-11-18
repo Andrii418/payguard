@@ -14,7 +14,6 @@ export function AnimatedNumber({ value, decimals = 2, className }: AnimatedNumbe
   const previous = useRef(0);
 
   useEffect(() => {
-    // Animujemy od ostatnio pokazanej wartości, więc przy zmianie danych liczba "dopływa" płynnie.
     const controls = animate(previous.current, value, {
       duration: 1.1,
       ease: [0.16, 1, 0.3, 1],

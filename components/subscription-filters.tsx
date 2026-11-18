@@ -32,7 +32,6 @@ export function SubscriptionToolbar({
 }: SubscriptionToolbarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Skrot "/" ustawia fokus w wyszukiwarce (jak w GitHubie), o ile nie piszesz akurat w innym polu.
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;

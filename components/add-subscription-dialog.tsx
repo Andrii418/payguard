@@ -45,10 +45,10 @@ const primaryButtonClass =
   "bg-emerald-500 shadow-[0_0_0_1px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500/90 hover:shadow-[0_0_24px_-4px_rgba(16,185,129,0.6)] active:scale-[0.97]";
 
 interface SubscriptionFormDialogProps {
-  subscription?: Subscription; // brak = tryb dodawania, jest = tryb edycji
+  subscription?: Subscription; 
   trigger: React.ReactElement;
   onSaved: () => void;
-  open?: boolean; // opcjonalne sterowanie z zewnątrz
+  open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
@@ -89,7 +89,6 @@ function SubscriptionFormDialog({
     setOpen(next);
     setFieldErrors({});
 
-    // Przy otwarciu w trybie edycji wypełniamy pola aktualnymi danymi z bazy.
     if (next && subscription) {
       setName(subscription.name);
       setPrice(String(subscription.price));

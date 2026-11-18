@@ -24,7 +24,6 @@ interface ChartTooltipCardProps {
   footer?: { label: string; value: string };
 }
 
-// Wspólny, "szklany" wygląd tooltipów we wszystkich wykresach.
 export function ChartTooltipCard({ title, rows, footer }: ChartTooltipCardProps) {
   return (
     <div className="min-w-[170px] rounded-xl border border-white/10 bg-[#0b0d13]/90 px-3.5 py-3 text-xs shadow-2xl shadow-black/50 backdrop-blur-xl">

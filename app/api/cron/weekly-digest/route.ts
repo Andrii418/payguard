@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   }
 
   const today = new Date();
-  const weekStart = toISODate(addDays(-6, today)); // ostatnie 7 dni razem z dzisiejszym
+  const weekStart = toISODate(addDays(-6, today)); 
   const monthStart = `${monthKey(today)}-01`;
   const from = weekStart < monthStart ? weekStart : monthStart;
 
@@ -43,7 +43,6 @@ export async function GET(req: NextRequest) {
       spentOn: String(e.spent_on),
     }));
 
-    // Bez żadnych wydatków w ostatnich dniach nie ma o czym pisać
     if (rows.length === 0) continue;
 
     const weekRows = rows.filter((r) => r.spentOn >= weekStart);

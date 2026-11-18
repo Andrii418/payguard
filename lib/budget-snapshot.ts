@@ -10,10 +10,10 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 interface SnapshotInput {
-  expenses: Expense[]; // bieżący i poprzedni miesiąc
-  subscriptions: Subscription[]; // wszystkie płatności cykliczne
+  expenses: Expense[]; 
+  subscriptions: Subscription[]; 
   limits: Record<string, number>;
-  month: string; // bieżący miesiąc, YYYY-MM
+  month: string; 
 }
 
 export function buildBudgetSnapshot({ expenses, subscriptions, limits, month }: SnapshotInput): BudgetSnapshot {
@@ -23,7 +23,6 @@ export function buildBudgetSnapshot({ expenses, subscriptions, limits, month }: 
   const previous = summarizeMonth(expenses, previousKey);
   const previousSame = comparablePrevious(summary, previous);
 
-  // Poprzedni miesiąc "do tego samego dnia", osobno dla każdej kategorii
   const previousByCategory: Record<string, number> = {};
   for (const e of expenses) {
     if (!e.spent_on.startsWith(previousKey)) continue;
@@ -37,7 +36,6 @@ export function buildBudgetSnapshot({ expenses, subscriptions, limits, month }: 
   const free = totalLimit !== null ? totalLimit - summary.total - scheduled : null;
   const freePerDay = free !== null && free > 0 && daysLeft + 1 > 0 && summary.isCurrent ? free / (daysLeft + 1) : null;
 
-  // Kategorie z wydatkami oraz te, które mają ustawiony limit (nawet jeśli jeszcze nic w nich nie wydano)
   const keys = new Set<string>([
     ...summary.byCategory.map((c) => c.category),
     ...Object.keys(limits).filter((k) => k !== "total" && k !== "subscriptions"),
@@ -68,7 +66,6 @@ export function buildBudgetSnapshot({ expenses, subscriptions, limits, month }: 
     daysUntilNext: daysUntil(s.next_renewal),
   }));
 
-  // Największe wydatki zmienne: tylko kategoria i kwota, bez opisów (prywatność)
   const largestVariable = expenses
     .filter((e) => e.spent_on.startsWith(month) && !isRecurringExpense(e))
     .sort((a, b) => b.amount - a.amount)

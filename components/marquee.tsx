@@ -18,7 +18,6 @@ const items = [
 ];
 
 export function Marquee() {
-  // Lista podwojona + przesunięcie o -50% daje płynną, nieskończoną pętlę.
   const loop = [...items, ...items];
 
   return (

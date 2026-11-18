@@ -22,7 +22,6 @@ interface Cached {
   monthLabel: string;
 }
 
-// Ostatnia analiza zostaje w pamięci karty przeglądarki, więc przejście na inną stronę jej nie kasuje.
 function readCache(monthLabel: string): Cached | null {
   if (typeof window === "undefined") return null;
   try {
@@ -39,7 +38,6 @@ function writeCache(value: Cached) {
   try {
     window.sessionStorage.setItem(CACHE_KEY, JSON.stringify(value));
   } catch {
-    // brak dostępu do sessionStorage (np. tryb prywatny) - analiza po prostu nie zostanie zapamiętana
   }
 }
 

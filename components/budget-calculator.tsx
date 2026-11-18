@@ -48,10 +48,9 @@ export function BudgetCalculator() {
 
   const free = budget - fixed - goal;
   const over = free < 0;
-  const perDay = over ? 0 : free / 30; // uproszczenie: 30 dni w miesiącu
+  const perDay = over ? 0 : free / 30; 
   const perWeek = perDay * 7;
 
-  // Szerokości segmentów paska (gdy suma przekracza budżet, skalujemy do sumy, żeby pasek się nie "wylewał")
   const total = Math.max(budget, fixed + goal);
   const pct = (n: number) => `${(Math.max(n, 0) / total) * 100}%`;
 

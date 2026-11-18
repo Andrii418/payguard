@@ -24,7 +24,6 @@ import { Button } from "@/components/ui/button";
 
 const VIEW_KEY = "payguard:subscriptions-view";
 
-// Zapamietany widok (lista/kafelki). Wywolywane jako inicjalizator stanu.
 function readStoredView(): ViewMode {
   if (typeof window === "undefined") return "list";
   try {
@@ -87,7 +86,6 @@ function SubscriptionsContent() {
   const [addOpen, setAddOpen] = useState(false);
   const { subscriptions, loading, live } = useSubscriptions(refreshKey);
 
-  // Parametry z URL ustawia paleta komend (?q=Netflix, ?new=1). Po zastosowaniu czyscimy adres.
   useEffect(() => {
     const q = searchParams.get("q");
     const wantsNew = searchParams.get("new");
@@ -116,7 +114,6 @@ function SubscriptionsContent() {
     try {
       window.localStorage.setItem(VIEW_KEY, next);
     } catch {
-      // brak dostepu do localStorage (np. tryb prywatny) - widok po prostu nie zostanie zapamietany
     }
   }
 
@@ -125,7 +122,6 @@ function SubscriptionsContent() {
       toast.error("Brak subskrypcji do wyeksportowania.");
       return;
     }
-    // Eksportujemy to, co uzytkownik aktualnie widzi (z uwzglednieniem filtrow)
     exportSubscriptionsToCsv(visible);
     toast.success(`Pobrano plik CSV (${visible.length} pozycji).`);
   }

@@ -26,7 +26,7 @@ type FieldName = "amount" | "category" | "description" | "spent_on";
 type FieldErrors = Partial<Record<FieldName, string>>;
 
 interface ExpenseFormProps {
-  expense?: Expense; // brak = dodawanie, jest = edycja
+  expense?: Expense; 
   layout?: "inline" | "stacked";
   defaultDate?: string;
   inputRef?: React.RefObject<HTMLInputElement | null>;
@@ -107,7 +107,6 @@ export function ExpenseForm({ expense, layout = "stacked", defaultDate, inputRef
     toast.success(`Dodano wydatek: ${formatPLN(parsed.data.amount)}`);
     track("expense_added", { category: parsed.data.category });
 
-    // Zostawiamy kategorie i date, zeby wpisywanie kilku wydatkow z rzedu bylo szybkie.
     setAmount("");
     setDescription("");
     amountRef.current?.focus();

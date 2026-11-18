@@ -10,7 +10,7 @@ export interface Insight {
 interface InsightInput {
   summary: MonthSummary;
   limits: Record<string, number>;
-  subscriptionsMonthly: number; // koszt samych subskrypcji (bez opłat stałych) na miesiąc
+  subscriptionsMonthly: number; 
 }
 
 export function buildInsights({ summary, limits, subscriptionsMonthly }: InsightInput): Insight[] {

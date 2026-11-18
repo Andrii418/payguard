@@ -25,7 +25,7 @@ export function LimitEditor({ value, onSave, emptyLabel = "Ustaw limit" }: Limit
 
   async function commit() {
     const raw = draft.trim().replace(",", ".");
-    let amount: number | null = null; // puste pole = usuniecie limitu
+    let amount: number | null = null; 
 
     if (raw !== "") {
       const parsed = budgetLimitSchema.safeParse(raw);

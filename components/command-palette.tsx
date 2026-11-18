@@ -25,7 +25,6 @@ import { formatPLN, monthlyEquivalent } from "@/lib/analytics";
 import { getCategoryMeta } from "@/lib/category-meta";
 import type { Subscription } from "@/lib/use-subscriptions";
 
-// Przycisk w menu bocznym otwiera palete przez to zdarzenie - komponenty nie musza sie znac.
 export const OPEN_PALETTE_EVENT = "payguard:open-palette";
 
 const groupClass =
@@ -84,7 +83,6 @@ export function CommandPalette() {
     };
   }, []);
 
-  // Swieze dane przy kazdym otwarciu palety
   useEffect(() => {
     if (!open) return;
     let cancelled = false;

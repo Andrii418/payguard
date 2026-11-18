@@ -10,10 +10,9 @@ import {
 import { getAuthenticatedUser } from "@/lib/server-auth";
 
 const MODEL = "gemini-3.8-flash";
-const MAX_ATTEMPTS = 4; // pierwsza próba + 3 ponowienia przy przeciążeniu
-const BASE_DELAY_MS = 1500; // opóźnienia: 1,5 s, 3 s, 6 s
+const MAX_ATTEMPTS = 4; 
+const BASE_DELAY_MS = 1500; 
 
-// Jawny limit czasu funkcji (60 s mieści się w limitach darmowego planu Vercela)
 export const maxDuration = 60;
 
 const requestSchema = z.object({ snapshot: budgetSnapshotSchema });
@@ -23,7 +22,6 @@ interface GeminiErrorInfo {
   message: string;
 }
 
-// Błędy z SDK Gemini mają różny kształt, więc odczytujemy status i treść ostrożnie.
 function readError(err: unknown): GeminiErrorInfo {
   const e = err as { status?: number; error?: { code?: number }; message?: string } | null;
   const status =
@@ -49,7 +47,6 @@ async function askGemini(ai: GoogleGenAI, prompt: string): Promise<string> {
     } catch (err) {
       lastError = err;
 
-      // Ponawiamy tylko przy przeciążeniu. Zły klucz czy model nic nie zmieni.
       if (!isOverloaded(readError(err)) || attempt === MAX_ATTEMPTS) break;
 
       const delay = BASE_DELAY_MS * 2 ** (attempt - 1);
@@ -62,7 +59,6 @@ async function askGemini(ai: GoogleGenAI, prompt: string): Promise<string> {
 }
 
 function parseAdvice(text: string): BudgetAdvice | null {
-  // Model czasem opakowuje JSON w znaczniki markdown mimo prośby, żeby tego nie robił
   const cleaned = text
     .trim()
     .replace(/^```(?:json)?\s*/i, "")
@@ -107,7 +103,6 @@ Odpowiedz WYŁĄCZNIE poprawnym JSON-em, bez komentarza i bez znaczników markdo
 Limity: risks 0-3 pozycje, savings 0-4 pozycje, actions 2-4 pozycje. Jeśli danych jest za mało, zwróć puste listy risks i savings i napisz o tym w summary.`;
 }
 
-// Każdy rodzaj błędu dostaje własny, zrozumiały komunikat (pełna treść trafia do logów).
 function errorResponse(err: unknown) {
   const info = readError(err);
   const { status, message } = info;
@@ -168,7 +163,6 @@ export async function POST(req: NextRequest) {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const prompt = buildPrompt(snapshot);
 
-    // Odpowiedź musi być poprawnym JSON-em. Przy nieczytelnej odpowiedzi próbujemy jeszcze raz.
     let advice = parseAdvice(await askGemini(ai, prompt));
     if (!advice) advice = parseAdvice(await askGemini(ai, prompt));
 
@@ -180,7 +174,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Kwot oszczędności nie ufamy bezgranicznie: nie mogą przekraczać skali wydatków użytkownika.
     const cap = Math.max(snapshot.totals.spent, snapshot.recurringMonthlyTotal, 0);
     advice.savings = advice.savings.map((s) => ({
       ...s,
